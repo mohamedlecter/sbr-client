@@ -17,16 +17,24 @@ const Login = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-
-    // Mock login
-    setTimeout(() => {
+    if (email === "test@test.com" && password === "test") {
       toast({
         title: "Login successful",
         description: "Welcome back!",
       });
-      navigate("/");
+      navigate("/account");
       setIsLoading(false);
-    }, 1000);
+      return;
+    }
+    toast({
+      title: "Login failed",
+      description: "Invalid email or password",
+      variant: "destructive",
+    });
+    setIsLoading(false);
+    return;
+
+  
   };
 
   return (

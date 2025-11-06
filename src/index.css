@@ -8,7 +8,7 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Racing Red Theme - SBR Performance */
+    /* Light Theme - SBR Performance */
     --background: 0 0% 100%;
     --foreground: 0 0% 10%;
 

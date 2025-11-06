@@ -1,12 +1,13 @@
-import { Link } from "react-router-dom";
-import { Card, CardContent } from "@/components/ui/card";
+import { Link, useParams } from "react-router-dom";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { Package, ChevronRight, Calendar } from "lucide-react";
+import { Package, ChevronRight, Calendar, ArrowLeft, MapPin, CreditCard, X } from "lucide-react";
 
 const Orders = () => {
+  const { id } = useParams();
   const orders = [
     {
       id: "ORD-2024-001",
@@ -60,6 +61,135 @@ const Orders = () => {
   const getStatusLabel = (status: string) => {
     return status.charAt(0).toUpperCase() + status.slice(1);
   };
+
+  // If viewing a specific order
+  if (id) {
+    const order = orders.find((o) => o.id === id) || orders[0];
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+
+        <main className="flex-1 py-8">
+          <div className="container mx-auto px-4 max-w-4xl">
+            <div className="mb-6">
+              <Button variant="ghost" asChild>
+                <Link to="/account/orders">
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Back to Orders
+                </Link>
+              </Button>
+            </div>
+
+            <div className="mb-8">
+              <h1 className="text-3xl md:text-4xl font-bold mb-2">Order Details</h1>
+              <p className="text-muted-foreground">Order #{order.id}</p>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2 space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Order Items</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {order.items.map((item, index) => (
+                        <div key={index} className="flex justify-between items-center py-3 border-b last:border-0">
+                          <div>
+                            <p className="font-medium">{item}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <MapPin className="h-5 w-5" />
+                      Shipping Address
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-1">
+                      <p className="font-medium">Home</p>
+                      <p className="text-muted-foreground">123 Performance Street</p>
+                      <p className="text-muted-foreground">Dubai, UAE 12345</p>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <CreditCard className="h-5 w-5" />
+                      Payment Information
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Payment Method</span>
+                        <span className="font-medium">SADAD</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Payment Status</span>
+                        <Badge className="bg-green-500">Paid</Badge>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div>
+                <Card className="sticky top-24">
+                  <CardHeader>
+                    <CardTitle>Order Summary</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">Status</p>
+                      <Badge className={getStatusColor(order.status)}>{getStatusLabel(order.status)}</Badge>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">Order Date</p>
+                      <p className="font-medium">{new Date(order.date).toLocaleDateString()}</p>
+                    </div>
+                    <div className="pt-4 border-t space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Subtotal</span>
+                        <span className="font-medium">${order.total.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Shipping</span>
+                        <span className="font-medium">$50.00</span>
+                      </div>
+                      <div className="flex justify-between text-lg font-bold pt-2">
+                        <span>Total</span>
+                        <span className="text-primary">${(order.total + 50).toFixed(2)}</span>
+                      </div>
+                    </div>
+                    <Button asChild variant="outline" className="w-full">
+                      <Link to={`/account/orders/${order.id}/track`}>Track Order</Link>
+                    </Button>
+                    {(order.status === "placed" || order.status === "processing") && (
+                      <Button variant="destructive" className="w-full">
+                        <X className="mr-2 h-4 w-4" />
+                        Cancel Order
+                      </Button>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </div>
+        </main>
+
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -115,12 +245,19 @@ const Orders = () => {
                         <p className="text-sm text-muted-foreground">Total</p>
                         <p className="text-xl font-bold text-primary">${order.total}</p>
                       </div>
-                      <Button asChild variant="outline">
-                        <Link to={`/account/orders/${order.id}`}>
-                          View Details
-                          <ChevronRight className="ml-2 h-4 w-4" />
-                        </Link>
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button asChild variant="outline" size="sm">
+                          <Link to={`/account/orders/${order.id}/track`}>
+                            Track Order
+                          </Link>
+                        </Button>
+                        <Button asChild variant="outline" size="sm">
+                          <Link to={`/account/orders/${order.id}`}>
+                            View Details
+                            <ChevronRight className="ml-2 h-4 w-4" />
+                          </Link>
+                        </Button>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>

@@ -14,9 +14,9 @@ const ProductDetail = () => {
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
 
-  // Mock product data
+  // Mock product data - in real app, fetch based on id
   const product = {
-    id: 1,
+    id: id || "1",
     name: "Akrapovič Racing Titanium Exhaust System",
     brand: "Akrapovič",
     brandLogo: "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=200",
