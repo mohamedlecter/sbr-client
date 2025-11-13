@@ -1,27 +1,32 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { User, Mail, Phone, Lock, ArrowLeft, Eye, EyeOff, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAppSelector, useAppDispatch } from "@/store/hooks";
+import { fetchProfile, updateProfile, changePassword } from "@/store/slices/userSlice";
 
 const ProfileSettings = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const dispatch = useAppDispatch();
+  const { profile, isLoading: profileLoading } = useAppSelector((state) => state.user);
+  const { isAuthenticated } = useAppSelector((state) => state.auth);
+  
   const [isLoading, setIsLoading] = useState(false);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [profileData, setProfileData] = useState({
-    fullName: "John Doe",
-    email: "john@example.com",
-    phone: "+1234567890",
+    fullName: "",
+    email: "",
+    phone: "",
   });
 
   const [passwordData, setPasswordData] = useState({
@@ -30,18 +35,68 @@ const ProfileSettings = () => {
     confirmPassword: "",
   });
 
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate("/login");
+      return;
+    }
+    
+    // Fetch profile if not already loaded
+    if (!profile) {
+      dispatch(fetchProfile());
+    } else {
+      // Initialize form with profile data
+      setProfileData({
+        fullName: profile.full_name || "",
+        email: profile.email || "",
+        phone: profile.phone || "",
+      });
+    }
+  }, [isAuthenticated, navigate, dispatch, profile]);
+
+  // Update form when profile changes
+  useEffect(() => {
+    if (profile) {
+      setProfileData({
+        fullName: profile.full_name || "",
+        email: profile.email || "",
+        phone: profile.phone || "",
+      });
+    }
+  }, [profile]);
+
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Mock update
-    setTimeout(() => {
+    try {
+      const result = await dispatch(updateProfile({
+        full_name: profileData.fullName,
+        phone: profileData.phone,
+      }));
+
+      if (updateProfile.fulfilled.match(result)) {
+        toast({
+          title: "Profile updated",
+          description: "Your profile information has been updated successfully",
+        });
+        dispatch(fetchProfile());
+      } else {
+        toast({
+          title: "Update failed",
+          description: result.payload as string || "Failed to update profile",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
       toast({
-        title: "Profile updated",
-        description: "Your profile information has been updated successfully",
+        title: "Error",
+        description: "An error occurred while updating your profile",
+        variant: "destructive",
       });
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   const handleChangePassword = async (e: React.FormEvent) => {
@@ -67,20 +122,56 @@ const ProfileSettings = () => {
 
     setIsLoading(true);
 
-    // Mock password change
-    setTimeout(() => {
+    try {
+      const result = await dispatch(changePassword({
+        current_password: passwordData.currentPassword,
+        new_password: passwordData.newPassword,
+      }));
+
+      if (changePassword.fulfilled.match(result)) {
+        toast({
+          title: "Password changed",
+          description: "Your password has been updated successfully",
+        });
+        setPasswordData({
+          currentPassword: "",
+          newPassword: "",
+          confirmPassword: "",
+        });
+        dispatch(fetchProfile());
+      } else {
+        toast({
+          title: "Password change failed",
+          description: result.payload as string || "Failed to change password",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
       toast({
-        title: "Password changed",
-        description: "Your password has been updated successfully",
+        title: "Error",
+        description: "An error occurred while changing your password",
+        variant: "destructive",
       });
-      setPasswordData({
-        currentPassword: "",
-        newPassword: "",
-        confirmPassword: "",
-      });
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
+
+  if (!isAuthenticated) {
+    return null;
+  }
+
+  if (profileLoading && !profile) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main className="flex-1 flex items-center justify-center py-16">
+          <div className="text-center text-muted-foreground">Loading profile...</div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -136,6 +227,7 @@ const ProfileSettings = () => {
                         value={profileData.email}
                         onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
                         className="pl-10"
+                        disabled
                         required
                       />
                     </div>

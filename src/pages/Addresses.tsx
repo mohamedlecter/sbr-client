@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,31 +17,18 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { MapPin, Plus, Edit, Trash2, ArrowLeft, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAppSelector, useAppDispatch } from "@/store/hooks";
+import { fetchAddresses, addAddress, updateAddress, deleteAddress } from "@/store/slices/userSlice";
 
 const Addresses = () => {
   const { toast } = useToast();
-  const [addresses, setAddresses] = useState([
-    {
-      id: "1",
-      label: "Home",
-      street: "123 Performance Street",
-      city: "Dubai",
-      country: "UAE",
-      postalCode: "12345",
-      isDefault: true,
-    },
-    {
-      id: "2",
-      label: "Work",
-      street: "456 Business Avenue",
-      city: "Abu Dhabi",
-      country: "UAE",
-      postalCode: "54321",
-      isDefault: false,
-    },
-  ]);
+  const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  const { addresses, isLoading } = useAppSelector((state) => state.user);
+  const { isAuthenticated } = useAppSelector((state) => state.auth);
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [editingAddress, setEditingAddress] = useState<any>(null);
   const [formData, setFormData] = useState({
     label: "",
@@ -52,10 +39,30 @@ const Addresses = () => {
     isDefault: false,
   });
 
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate("/login");
+      return;
+    }
+    // Fetch addresses if not already loaded
+    if (addresses.length === 0) {
+      dispatch(fetchAddresses());
+    }
+  }, [isAuthenticated, navigate, dispatch, addresses.length]);
+
+  console.log("addresses", addresses);
+
   const handleOpenDialog = (address?: any) => {
     if (address) {
       setEditingAddress(address);
-      setFormData(address);
+      setFormData({
+        label: address.label || "",
+        street: address.street || "",
+        city: address.city || "",
+        country: address.country || "",
+        postalCode: address.postal_code || "",
+        isDefault: address.is_default || false,
+      });
     } else {
       setEditingAddress(null);
       setFormData({
@@ -70,51 +77,155 @@ const Addresses = () => {
     setIsDialogOpen(true);
   };
 
-  const handleSaveAddress = () => {
-    if (editingAddress) {
-      // Update existing
-      setAddresses(
-        addresses.map((addr) => (addr.id === editingAddress.id ? { ...formData, id: editingAddress.id } : addr))
-      );
+  const handleSaveAddress = async () => {
+    if (!formData.label || !formData.street || !formData.city || !formData.country) {
       toast({
-        title: "Address updated",
-        description: "Your address has been updated successfully",
+        title: "Error",
+        description: "Please fill in all required fields",
+        variant: "destructive",
       });
-    } else {
-      // Add new
-      const newAddress = {
-        ...formData,
-        id: Date.now().toString(),
+      return;
+    }
+
+    setIsSaving(true);
+
+    try {
+      const addressData = {
+        label: formData.label,
+        street: formData.street,
+        city: formData.city,
+        country: formData.country,
+        postal_code: formData.postalCode || undefined,
+        is_default: formData.isDefault,
       };
-      setAddresses([...addresses, newAddress]);
+
+      if (editingAddress) {
+        // Update existing
+        const result = await dispatch(updateAddress({
+          id: editingAddress.id,
+          ...addressData,
+        }));
+
+        if (updateAddress.fulfilled.match(result)) {
+          toast({
+            title: "Address updated",
+            description: "Your address has been updated successfully",
+          });
+          dispatch(fetchAddresses()); // Refresh addresses
+          setIsDialogOpen(false);
+        } else {
+          toast({
+            title: "Update failed",
+            description: result.payload as string || "Failed to update address",
+            variant: "destructive",
+          });
+        }
+      } else {
+        // Add new
+        const result = await dispatch(addAddress(addressData));
+
+        if (addAddress.fulfilled.match(result)) {
+          toast({
+            title: "Address added",
+            description: "Your new address has been added successfully",
+          });
+          dispatch(fetchAddresses()); // Refresh addresses
+          setIsDialogOpen(false);
+        } else {
+          toast({
+            title: "Add failed",
+            description: result.payload as string || "Failed to add address",
+            variant: "destructive",
+          });
+        }
+      }
+    } catch (error) {
       toast({
-        title: "Address added",
-        description: "Your new address has been added successfully",
+        title: "Error",
+        description: "An error occurred while saving the address",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleDeleteAddress = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this address?")) {
+      return;
+    }
+
+    try {
+      const result = await dispatch(deleteAddress(id));
+
+      if (deleteAddress.fulfilled.match(result)) {
+        toast({
+          title: "Address deleted",
+          description: "Address has been removed",
+        });
+        dispatch(fetchAddresses()); // Refresh addresses
+      } else {
+        toast({
+          title: "Delete failed",
+          description: result.payload as string || "Failed to delete address",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "An error occurred while deleting the address",
+        variant: "destructive",
       });
     }
-    setIsDialogOpen(false);
   };
 
-  const handleDeleteAddress = (id: string) => {
-    setAddresses(addresses.filter((addr) => addr.id !== id));
-    toast({
-      title: "Address deleted",
-      description: "Address has been removed",
-    });
+  const handleSetDefault = async (id: string) => {
+    try {
+      // First, unset all other default addresses
+      const addressesToUpdate = addresses.filter((addr) => addr.is_default && addr.id !== id);
+      
+      // Unset other defaults in parallel
+      await Promise.all(
+        addressesToUpdate.map((addr) =>
+          dispatch(updateAddress({
+            id: addr.id,
+            is_default: false,
+          }))
+        )
+      );
+
+      // Then set the selected address as default
+      const result = await dispatch(updateAddress({
+        id,
+        is_default: true,
+      }));
+
+      if (updateAddress.fulfilled.match(result)) {
+        toast({
+          title: "Default address updated",
+          description: "Your default address has been changed",
+        });
+        dispatch(fetchAddresses()); // Refresh addresses
+      } else {
+        toast({
+          title: "Update failed",
+          description: result.payload as string || "Failed to update default address",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "An error occurred while updating the default address",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleSetDefault = (id: string) => {
-    setAddresses(
-      addresses.map((addr) => ({
-        ...addr,
-        isDefault: addr.id === id,
-      }))
-    );
-    toast({
-      title: "Default address updated",
-      description: "Your default address has been changed",
-    });
-  };
+  if (!isAuthenticated) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -157,6 +268,7 @@ const Addresses = () => {
                       placeholder="Home, Work, etc."
                       value={formData.label}
                       onChange={(e) => setFormData({ ...formData, label: e.target.value })}
+                      required
                     />
                   </div>
                   <div className="space-y-2">
@@ -166,6 +278,7 @@ const Addresses = () => {
                       placeholder="123 Main Street"
                       value={formData.street}
                       onChange={(e) => setFormData({ ...formData, street: e.target.value })}
+                      required
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
@@ -176,6 +289,7 @@ const Addresses = () => {
                         placeholder="Dubai"
                         value={formData.city}
                         onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                        required
                       />
                     </div>
                     <div className="space-y-2">
@@ -185,6 +299,7 @@ const Addresses = () => {
                         placeholder="UAE"
                         value={formData.country}
                         onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+                        required
                       />
                     </div>
                   </div>
@@ -209,15 +324,21 @@ const Addresses = () => {
                       Set as default address
                     </Label>
                   </div>
-                  <Button onClick={handleSaveAddress} className="w-full">
-                    {editingAddress ? "Update Address" : "Add Address"}
+                  <Button onClick={handleSaveAddress} className="w-full" disabled={isSaving}>
+                    {isSaving ? "Saving..." : editingAddress ? "Update Address" : "Add Address"}
                   </Button>
                 </div>
               </DialogContent>
             </Dialog>
           </div>
 
-          {addresses.length === 0 ? (
+          {isLoading ? (
+            <Card>
+              <CardContent className="flex flex-col items-center justify-center py-12">
+                <div className="text-center text-muted-foreground">Loading addresses...</div>
+              </CardContent>
+            </Card>
+          ) : addresses.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
                 <MapPin className="h-16 w-16 text-muted-foreground mb-4" />
@@ -232,13 +353,13 @@ const Addresses = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {addresses.map((address) => (
-                <Card key={address.id} className={address.isDefault ? "border-primary border-2" : ""}>
+                <Card key={address.id} className={address.is_default ? "border-primary border-2" : ""}>
                   <CardHeader>
                     <div className="flex justify-between items-start">
                       <div>
                         <CardTitle className="flex items-center gap-2">
                           {address.label}
-                          {address.isDefault && (
+                          {address.is_default && (
                             <Badge className="bg-primary">Default</Badge>
                           )}
                         </CardTitle>
@@ -251,12 +372,12 @@ const Addresses = () => {
                       <p className="text-muted-foreground">
                         {address.city}, {address.country}
                       </p>
-                      {address.postalCode && (
-                        <p className="text-muted-foreground">Postal Code: {address.postalCode}</p>
+                      {address.postal_code && (
+                        <p className="text-muted-foreground">Postal Code: {address.postal_code}</p>
                       )}
                     </div>
                     <div className="flex gap-2 pt-2 border-t">
-                      {!address.isDefault && (
+                      {!address.is_default && (
                         <Button
                           variant="outline"
                           size="sm"
