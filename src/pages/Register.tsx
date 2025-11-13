@@ -6,10 +6,13 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { User, Mail, Lock, Phone, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAppDispatch } from "@/store/hooks";
+import { registerUser } from "@/store/slices/authSlice";
 
 const Register = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const dispatch = useAppDispatch();
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -33,15 +36,36 @@ const Register = () => {
 
     setIsLoading(true);
 
-    // Mock registration
-    setTimeout(() => {
+    try {
+      const result = await dispatch(registerUser({
+        full_name: formData.fullName,
+        email: formData.email,
+        phone: formData.phone,
+        password: formData.password,
+      }));
+      
+      if (registerUser.fulfilled.match(result)) {
+        toast({
+          title: "Registration successful",
+          description: "Please check your email to verify your account",
+        });
+        navigate("/verify");
+      } else {
+        toast({
+          title: "Registration failed",
+          description: result.payload as string || "An error occurred. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
       toast({
-        title: "Registration successful",
-        description: "Please check your email to verify your account",
+        title: "Registration failed",
+        description: "An error occurred. Please try again.",
+        variant: "destructive",
       });
-      navigate("/verify");
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   return (

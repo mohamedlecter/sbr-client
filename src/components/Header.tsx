@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { ShoppingCart, User, Search, Menu, X, LogOut, Settings, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,12 +11,29 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useAppSelector, useAppDispatch } from "@/store/hooks";
+import { logoutUser } from "@/store/slices/authSlice";
+import { fetchCart } from "@/store/slices/cartSlice";
 
 const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [isLoggedIn] = useState(false); // Mock auth state
-  const cartItemCount = 3; // Mock cart count
+  const dispatch = useAppDispatch();
+  const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
+  const cartItems = useAppSelector((state) => state.cart.items);
+  const cartItemCount = Array.isArray(cartItems) 
+    ? cartItems.reduce((sum, item) => sum + (item.quantity || 0), 0)
+    : 0;
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      dispatch(fetchCart());
+    }
+  }, [isAuthenticated, dispatch]);
+
+  const handleLogout = () => {
+    dispatch(logoutUser());
+  };
 
   return (
     <header className="sticky top-0 z-50 bg-background border-b border-border shadow-sm">
@@ -30,7 +47,7 @@ const Header = () => {
             </a>
           </div>
           <div className="flex items-center gap-4">
-            {isLoggedIn ? (
+            {isAuthenticated ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="flex items-center gap-1">
@@ -60,7 +77,7 @@ const Header = () => {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem className="cursor-pointer text-destructive">
+                  <DropdownMenuItem className="cursor-pointer text-destructive" onClick={handleLogout}>
                     <LogOut className="mr-2 h-4 w-4" />
                     Logout
                   </DropdownMenuItem>

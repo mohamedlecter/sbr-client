@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { ArrowRight, Bike, Wrench, Sparkles, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { useEffect, useState } from "react";
 import {
   Carousel,
   CarouselContent,
@@ -13,53 +14,46 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import TrustBadges from "@/components/TrustBadges";
 import heroImage from "@/assets/hero-motorcycle.jpg";
+import { useAppSelector, useAppDispatch } from "@/store/hooks";
+import { fetchBrands, fetchModels } from "@/store/slices/productsSlice";
+import { productsApi } from "@/lib/api";
+import { getImageUrl } from "@/lib/api";
 
 const Index = () => {
-  // Mock data for demo
-  const bikeModels = [
-    { id: 1, name: "Yamaha YZF-R1", year: "2020-2024", image: "https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=400" },
-    { id: 2, name: "Honda CBR1000RR", year: "2019-2024", image: "https://images.unsplash.com/photo-1609630875171-b1321377ee65?w=400" },
-    { id: 3, name: "Kawasaki Ninja ZX-10R", year: "2021-2024", image: "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?w=400" },
-    { id: 4, name: "Suzuki GSX-R1000", year: "2017-2024", image: "https://images.unsplash.com/photo-1558980664-769d59546b3d?w=400" },
-    { id: 5, name: "Ducati Panigale V4", year: "2018-2024", image: "https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=400" },
-    { id: 6, name: "BMW S1000RR", year: "2019-2024", image: "https://images.unsplash.com/photo-1609630875171-b1321377ee65?w=400" },
-    { id: 7, name: "Aprilia RSV4", year: "2020-2024", image: "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?w=400" },
-    { id: 8, name: "MV Agusta F4", year: "2017-2024", image: "https://images.unsplash.com/photo-1558980664-769d59546b3d?w=400" },
-  ];
+  const dispatch = useAppDispatch();
+  const { brands, models, isLoading } = useAppSelector((state) => state.products);
+  const [featuredProducts, setFeaturedProducts] = useState<any[]>([]);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(false);
 
-  const brands = [
-    { id: 1, name: "Akrapovič", logo: "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=200" },
-    { id: 2, name: "Yoshimura", logo: "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=200" },
-    { id: 3, name: "Brembo", logo: "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=200" },
-    { id: 4, name: "Öhlins", logo: "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=200" },
-    { id: 5, name: "Pirelli", logo: "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=200" },
-    { id: 6, name: "K&N", logo: "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=200" },
-    { id: 7, name: "Vortex", logo: "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=200" },
-    { id: 8, name: "Dynojet", logo: "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=200" },
-  ];
+  useEffect(() => {
+    // Fetch brands and models on component mount
+    dispatch(fetchBrands());
+    dispatch(fetchModels());
+  }, [dispatch]);
 
-  const partners = [
-    { id: 1, name: "Akrapovič", description: "Premium exhaust systems", logo: "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=200" },
-    { id: 2, name: "Brembo", description: "High-performance braking", logo: "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=200" },
-    { id: 3, name: "Öhlins", description: "Premium suspension", logo: "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=200" },
-    { id: 4, name: "Yoshimura", description: "Racing exhaust systems", logo: "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=200" },
-    { id: 5, name: "Pirelli", description: "High-performance tires", logo: "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=200" },
-    { id: 6, name: "K&N", description: "Air filters & intakes", logo: "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=200" },
-  ];
+  useEffect(() => {
+    // Fetch featured products
+    const fetchFeaturedProducts = async () => {
+      setIsLoadingProducts(true);
+      try {
+        const response = await productsApi.searchParts({ limit: 4 });
+        if (response.data) {
+          const data = response.data as any;
+          const products = Array.isArray(data) ? data : (data.parts || []);
+          setFeaturedProducts(products);
+        }
+      } catch (error) {
+        console.error('Error fetching featured products:', error);
+      } finally {
+        setIsLoadingProducts(false);
+      }
+    };
+    fetchFeaturedProducts();
+  }, []);
 
-  const categories = [
-    { id: 1, name: "Exhaust Systems", icon: Wrench, image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400" },
-    { id: 2, name: "Suspension", icon: Bike, image: "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?w=400" },
-    { id: 3, name: "Braking Systems", icon: Sparkles, image: "https://images.unsplash.com/photo-1558980664-769d59546b3d?w=400" },
-    { id: 4, name: "Engine Parts", icon: Wrench, image: "https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=400" },
-  ];
-
-  const featuredProducts = [
-    { id: 1, name: "Akrapovič Racing Exhaust", brand: "Akrapovič", price: 1299, image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400" },
-    { id: 2, name: "Brembo Brake Caliper Set", brand: "Brembo", price: 899, image: "https://images.unsplash.com/photo-1558980664-769d59546b3d?w=400" },
-    { id: 3, name: "Öhlins TTX Shock", brand: "Öhlins", price: 1599, image: "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?w=400" },
-    { id: 4, name: "K&N Air Filter Kit", brand: "K&N", price: 149, image: "https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=400" },
-  ];
+  // Extract brands and models from Redux state
+  const bikeModels = Array.isArray(models) ? models : ((models as any)?.models || []);
+  const brandsList = Array.isArray(brands) ? brands : ((brands as any)?.brands || []);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -112,25 +106,35 @@ const Index = () => {
                 className="w-full"
               >
                 <CarouselContent className="-ml-2 md:-ml-4">
-                  {bikeModels.map((model) => (
-                    <CarouselItem key={model.id} className="pl-2 md:pl-4 basis-full sm:basis-1/2 lg:basis-1/4">
-                      <Link to={`/bike-models/${model.id}`}>
-                        <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 h-full">
-                          <div className="aspect-[4/3] overflow-hidden">
-                            <img
-                              src={model.image}
-                              alt={model.name}
-                              className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
-                            />
-                          </div>
-                          <CardContent className="p-4">
-                            <h3 className="font-bold text-lg mb-1">{model.name}</h3>
-                            <p className="text-sm text-muted-foreground">{model.year}</p>
-                          </CardContent>
-                        </Card>
-                      </Link>
+                  {isLoading ? (
+                    <CarouselItem className="pl-2 md:pl-4 basis-full">
+                      <div className="text-center py-8 text-muted-foreground">Loading models...</div>
                     </CarouselItem>
-                  ))}
+                  ) : bikeModels.length > 0 ? (
+                    bikeModels.slice(0, 8).map((model: any) => (
+                      <CarouselItem key={model.id} className="pl-2 md:pl-4 basis-full sm:basis-1/2 lg:basis-1/4">
+                        <Link to={`/bike-models/${model.id}`}>
+                          <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 h-full">
+                            <div className="aspect-[4/3] overflow-hidden bg-muted">
+                              <img
+                                src={getImageUrl(model.image || model.image_url)}
+                                alt={model.name}
+                                className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
+                              />
+                            </div>
+                            <CardContent className="p-4">
+                              <h3 className="font-bold text-lg mb-1">{model.name}</h3>
+                              <p className="text-sm text-muted-foreground">{model.brand_name || model.year}</p>
+                            </CardContent>
+                          </Card>
+                        </Link>
+                      </CarouselItem>
+                    ))
+                  ) : (
+                    <CarouselItem className="pl-2 md:pl-4 basis-full">
+                      <div className="text-center py-8 text-muted-foreground">No models available</div>
+                    </CarouselItem>
+                  )}
                 </CarouselContent>
                 <CarouselPrevious className="left-2 md:left-4" />
                 <CarouselNext className="right-2 md:right-4" />
@@ -161,21 +165,39 @@ const Index = () => {
                 className="w-full"
               >
                 <CarouselContent className="-ml-2 md:-ml-4">
-                  {brands.map((brand) => (
-                    <CarouselItem key={brand.id} className="pl-2 md:pl-4 basis-1/2 sm:basis-1/3 lg:basis-1/6">
-                      <Link to={`/brands/${brand.id}`}>
-                        <Card className="p-6 hover:shadow-lg transition-all duration-300 hover:border-primary group h-full">
-                          <div className="aspect-square flex items-center justify-center">
-                            <div className="w-full h-full bg-muted rounded-lg flex items-center justify-center group-hover:bg-primary/10 transition-colors">
-                              <span className="font-bold text-foreground/70 group-hover:text-primary transition-colors text-center text-sm">
-                                {brand.name}
-                              </span>
-                            </div>
-                          </div>
-                        </Card>
-                      </Link>
+                  {isLoading ? (
+                    <CarouselItem className="pl-2 md:pl-4 basis-full">
+                      <div className="text-center py-8 text-muted-foreground">Loading brands...</div>
                     </CarouselItem>
-                  ))}
+                  ) : brandsList.length > 0 ? (
+                    brandsList.slice(0, 12).map((brand: any) => (
+                      <CarouselItem key={brand.id} className="pl-2 md:pl-4 basis-1/2 sm:basis-1/3 lg:basis-1/6">
+                        <Link to={`/brands/${brand.id}`}>
+                          <Card className="p-6 hover:shadow-lg transition-all duration-300 hover:border-primary group h-full">
+                            <div className="aspect-square flex items-center justify-center">
+                              {brand.logo_url ? (
+                                <img
+                                  src={getImageUrl(brand.logo_url)}
+                                  alt={brand.name}
+                                  className="w-full h-full object-contain p-2"
+                                />
+                              ) : (
+                                <div className="w-full h-full bg-muted rounded-lg flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+                                  <span className="font-bold text-foreground/70 group-hover:text-primary transition-colors text-center text-sm">
+                                    {brand.name}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          </Card>
+                        </Link>
+                      </CarouselItem>
+                    ))
+                  ) : (
+                    <CarouselItem className="pl-2 md:pl-4 basis-full">
+                      <div className="text-center py-8 text-muted-foreground">No brands available</div>
+                    </CarouselItem>
+                  )}
                 </CarouselContent>
                 <CarouselPrevious className="left-2 md:left-4" />
                 <CarouselNext className="right-2 md:right-4" />
@@ -198,27 +220,35 @@ const Index = () => {
               <h2 className="">Featured Products</h2>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {featuredProducts.map((product) => (
-                <Link key={product.id} to={`/products/parts/${product.id}`}>
-                  <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 group">
-                    <div className="aspect-square overflow-hidden bg-muted">
-                      <img
-                        src={product.image}
-                        alt={product.name}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                      />
-                    </div>
-                    <CardContent className="p-4">
-                      <p className="text-xs text-muted-foreground mb-1">{product.brand}</p>
-                      <h3 className="font-bold mb-2 line-clamp-2">{product.name}</h3>
-                      <p className="text-xl font-bold text-primary">${product.price}</p>
-                      <Button className="w-full mt-3" size="sm">
-                        Add to Cart
-                      </Button>
-                    </CardContent>
-                  </Card>
-                </Link>
-              ))}
+              {isLoadingProducts ? (
+                <div className="col-span-4 text-center py-8 text-muted-foreground">Loading featured products...</div>
+              ) : featuredProducts.length > 0 ? (
+                featuredProducts.map((product: any) => (
+                  <Link key={product.id} to={`/products/parts/${product.id}`}>
+                    <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 group">
+                      <div className="aspect-square overflow-hidden bg-muted">
+                        <img
+                          src={getImageUrl(product.image_url || product.image)}
+                          alt={product.name}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                        />
+                      </div>
+                      <CardContent className="p-4">
+                        <p className="text-xs text-muted-foreground mb-1">{product.brand_name || product.brand || 'Brand'}</p>
+                        <h3 className="font-bold mb-2 line-clamp-2">{product.name}</h3>
+                        <p className="text-xl font-bold text-primary">${(product.price || product.unit_price || 0).toFixed(2)}</p>
+                        <Button className="w-full mt-3" size="sm">
+                          Add to Cart
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                ))
+              ) : (
+                <div className="col-span-4 text-center py-8 text-muted-foreground">
+                  No featured products available
+                </div>
+              )}
             </div>
           </div>
         </section>
@@ -236,7 +266,7 @@ const Index = () => {
                 We partner with the world's leading manufacturers to bring you authentic, high-quality parts
               </p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {partners.map((partner) => (
                 <Link key={partner.id} to={`/partners/${partner.id}`}>
                   <Card className="p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 h-full">
@@ -255,7 +285,7 @@ const Index = () => {
                   </Card>
                 </Link>
               ))}
-            </div>
+            </div> */}
             <div className="text-center mt-8">
               <Button variant="outline" size="lg" asChild>
                 <Link to="/partners">

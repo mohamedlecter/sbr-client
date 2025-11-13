@@ -2,7 +2,9 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Provider } from "react-redux";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { store } from "./store/store";
 import Index from "./pages/Index";
 import Categories from "./pages/Categories";
 import Brands from "./pages/Brands";
@@ -30,45 +32,47 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/categories" element={<Categories />} />
-          <Route path="/categories/:id" element={<Categories />} />
-          <Route path="/brands" element={<Brands />} />
-          <Route path="/brands/:id" element={<Brands />} />
-          <Route path="/bike-models" element={<BikeModels />} />
-          <Route path="/bike-models/:id" element={<BikeModels />} />
-          <Route path="/products/parts/:id" element={<ProductDetail />} />
-          <Route path="/products/merchandise/:id" element={<ProductDetail />} />
-          <Route path="/search" element={<Search />} />
-          <Route path="/cart" element={<Cart />} />
-          <Route path="/checkout" element={<Checkout />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/verify" element={<Verify />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/account" element={<Account />} />
-          <Route path="/account/profile" element={<ProfileSettings />} />
-          <Route path="/account/addresses" element={<Addresses />} />
-          <Route path="/account/orders" element={<Orders />} />
-          <Route path="/account/orders/:id" element={<Orders />} />
-          <Route path="/account/orders/:id/track" element={<OrderTracking />} />
-          <Route path="/partners" element={<Partners />} />
-          <Route path="/partners/:id" element={<PartnerDetail />} />
-          <Route path="/feedback" element={<Feedback />} />
-          <Route path="/reviews" element={<Reviews />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
+  <Provider store={store}>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/categories" element={<Categories />} />
+            <Route path="/categories/:id" element={<Categories />} />
+            <Route path="/brands" element={<Brands />} />
+            <Route path="/brands/:id" element={<Brands />} />
+            <Route path="/bike-models" element={<BikeModels />} />
+            <Route path="/bike-models/:id" element={<BikeModels />} />
+            <Route path="/products/parts/:id" element={<ProductDetail />} />
+            <Route path="/products/merchandise/:id" element={<ProductDetail />} />
+            <Route path="/search" element={<Search />} />
+            <Route path="/cart" element={<Cart />} />
+            <Route path="/checkout" element={<Checkout />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/verify" element={<Verify />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/account" element={<Account />} />
+            <Route path="/account/profile" element={<ProfileSettings />} />
+            <Route path="/account/addresses" element={<Addresses />} />
+            <Route path="/account/orders" element={<Orders />} />
+            <Route path="/account/orders/:id" element={<Orders />} />
+            <Route path="/account/orders/:id/track" element={<OrderTracking />} />
+            <Route path="/partners" element={<Partners />} />
+            <Route path="/partners/:id" element={<PartnerDetail />} />
+            <Route path="/feedback" element={<Feedback />} />
+            <Route path="/reviews" element={<Reviews />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  </Provider>
 );
 
 export default App;

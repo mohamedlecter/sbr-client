@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -7,74 +7,85 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Trash2, Plus, Minus, ShoppingBag, ArrowRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAppSelector, useAppDispatch } from "@/store/hooks";
+import { fetchCart, updateCartItem, removeFromCart, clearCart } from "@/store/slices/cartSlice";
 
 const Cart = () => {
   const { toast } = useToast();
-  const [cartItems, setCartItems] = useState([
-    {
-      id: 1,
-      type: "part",
-      name: "Akrapovič Racing Titanium Exhaust",
-      brand: "Akrapovič",
-      price: 1299,
-      quantity: 1,
-      image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400",
-      inStock: true,
-    },
-    {
-      id: 2,
-      type: "part",
-      name: "Brembo Brake Caliper Set",
-      brand: "Brembo",
-      price: 899,
-      quantity: 2,
-      image: "https://images.unsplash.com/photo-1558980664-769d59546b3d?w=400",
-      inStock: true,
-    },
-    {
-      id: 3,
-      type: "part",
-      name: "Öhlins TTX Shock Absorber",
-      brand: "Öhlins",
-      price: 1599,
-      quantity: 1,
-      image: "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?w=400",
-      inStock: true,
-    },
-  ]);
+  const dispatch = useAppDispatch();
+  const { items: cartItems, summary, isLoading } = useAppSelector((state) => state.cart);
+  const { isAuthenticated } = useAppSelector((state) => state.auth);
 
-  const membershipDiscount = 0.05; // 5% discount
+  useEffect(() => {
+    if (isAuthenticated) {
+      dispatch(fetchCart());
+    }
+  }, [isAuthenticated, dispatch]);
 
-  const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const discountAmount = subtotal * membershipDiscount;
-  const total = subtotal - discountAmount;
-  const itemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+  const membershipDiscount = summary?.discount ? summary.discount / (summary.subtotal || 1) : 0.05; // 5% discount default
 
-  const updateQuantity = (id: number, delta: number) => {
-    setCartItems((items) =>
-      items.map((item) =>
-        item.id === id ? { ...item, quantity: Math.max(1, item.quantity + delta) } : item
-      )
+  // Ensure cartItems is always an array
+  const safeCartItems = Array.isArray(cartItems) ? cartItems : [];
+
+  const subtotal = summary?.subtotal || safeCartItems.reduce((sum, item) => sum + (item.price || 0) * item.quantity, 0);
+  const discountAmount = summary?.discount || subtotal * membershipDiscount;
+  const total = summary?.total || subtotal - discountAmount;
+  const itemCount = safeCartItems.reduce((sum, item) => sum + (item.quantity || 0), 0);
+
+  const updateQuantity = async (id: string, delta: number) => {
+    const item = safeCartItems.find((item) => item.id === id);
+    if (item) {
+      const newQuantity = Math.max(1, item.quantity + delta);
+      const result = await dispatch(updateCartItem({ id, quantity: newQuantity }));
+      if (updateCartItem.fulfilled.match(result)) {
+        dispatch(fetchCart()); // Refetch to get updated summary
+      }
+    }
+  };
+
+  const removeItem = async (id: string) => {
+    const result = await dispatch(removeFromCart(id));
+    if (removeFromCart.fulfilled.match(result)) {
+      toast({
+        title: "Item removed",
+        description: "Item has been removed from your cart",
+      });
+      dispatch(fetchCart()); // Refetch to get updated summary
+    }
+  };
+
+  const handleClearCart = async () => {
+    const result = await dispatch(clearCart());
+    if (clearCart.fulfilled.match(result)) {
+      toast({
+        title: "Cart cleared",
+        description: "All items have been removed from your cart",
+      });
+    }
+  };
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main className="flex-1 flex items-center justify-center py-16">
+          <div className="text-center">
+            <ShoppingBag className="h-24 w-24 mx-auto mb-6 text-muted-foreground" />
+            <h2 className="text-3xl font-bold mb-4">Please Login</h2>
+            <p className="text-muted-foreground mb-8">You need to be logged in to view your cart</p>
+            <Button asChild size="lg">
+              <Link to="/login">
+                Login <ArrowRight className="ml-2 h-5 w-5" />
+              </Link>
+            </Button>
+          </div>
+        </main>
+        <Footer />
+      </div>
     );
-  };
+  }
 
-  const removeItem = (id: number) => {
-    setCartItems((items) => items.filter((item) => item.id !== id));
-    toast({
-      title: "Item removed",
-      description: "Item has been removed from your cart",
-    });
-  };
-
-  const clearCart = () => {
-    setCartItems([]);
-    toast({
-      title: "Cart cleared",
-      description: "All items have been removed from your cart",
-    });
-  };
-
-  if (cartItems.length === 0) {
+  if (safeCartItems.length === 0 && !isLoading) {
     return (
       <div className="min-h-screen flex flex-col">
         <Header />
@@ -109,64 +120,74 @@ const Cart = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Cart Items */}
             <div className="lg:col-span-2 space-y-4">
-              {cartItems.map((item) => (
-                <Card key={item.id} className="hover:shadow-lg transition-shadow">
-                  <CardContent className="p-4">
-                    <div className="flex gap-4">
-                      <div className="w-24 h-24 rounded-lg overflow-hidden bg-muted shrink-0 border border-border">
-                        <img src={item.image} alt={item.name} className="w-full h-full object-cover hover:scale-110 transition-transform duration-300" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex justify-between items-start gap-2 mb-2">
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs text-muted-foreground mb-1">{item.brand}</p>
-                            <h3 className="font-bold line-clamp-2">{item.name}</h3>
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => removeItem(item.id)}
-                            className="shrink-0"
-                          >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
+              {isLoading ? (
+                <div className="text-center py-8 text-muted-foreground">Loading cart...</div>
+              ) : (
+                safeCartItems.map((item) => (
+                  <Card key={item.id} className="hover:shadow-lg transition-shadow">
+                    <CardContent className="p-4">
+                      <div className="flex gap-4">
+                        <div className="w-24 h-24 rounded-lg overflow-hidden bg-muted shrink-0 border border-border">
+                          <img 
+                            src={item.image || '/placeholder.svg'} 
+                            alt={item.name || 'Product'} 
+                            className="w-full h-full object-cover hover:scale-110 transition-transform duration-300" 
+                          />
                         </div>
-                        <div className="flex items-center justify-between mt-4">
-                          <div className="flex items-center border rounded-lg">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex justify-between items-start gap-2 mb-2">
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs text-muted-foreground mb-1">{item.brand || 'Brand'}</p>
+                              <h3 className="font-bold line-clamp-2">{item.name || 'Product'}</h3>
+                            </div>
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-8 w-8"
-                              onClick={() => updateQuantity(item.id, -1)}
-                              disabled={item.quantity <= 1}
+                              onClick={() => removeItem(item.id)}
+                              className="shrink-0"
                             >
-                              <Minus className="h-3 w-3" />
-                            </Button>
-                            <span className="w-12 text-center text-sm font-medium">{item.quantity}</span>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8"
-                              onClick={() => updateQuantity(item.id, 1)}
-                            >
-                              <Plus className="h-3 w-3" />
+                              <Trash2 className="h-4 w-4 text-destructive" />
                             </Button>
                           </div>
-                          <div className="text-right">
-                            <p className="font-bold text-lg">${item.price * item.quantity}</p>
-                            <p className="text-xs text-muted-foreground">${item.price} each</p>
+                          <div className="flex items-center justify-between mt-4">
+                            <div className="flex items-center border rounded-lg">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => updateQuantity(item.id, -1)}
+                                disabled={item.quantity <= 1}
+                              >
+                                <Minus className="h-3 w-3" />
+                              </Button>
+                              <span className="w-12 text-center text-sm font-medium">{item.quantity}</span>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => updateQuantity(item.id, 1)}
+                              >
+                                <Plus className="h-3 w-3" />
+                              </Button>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-bold text-lg">${((item.price || 0) * item.quantity).toFixed(2)}</p>
+                              <p className="text-xs text-muted-foreground">${(item.price || 0).toFixed(2)} each</p>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardContent>
+                  </Card>
+                ))
+              )}
 
-              <Button variant="outline" onClick={clearCart} className="w-full">
-                <Trash2 className="mr-2 h-4 w-4" />
-                Clear Cart
-              </Button>
+              {safeCartItems.length > 0 && (
+                <Button variant="outline" onClick={handleClearCart} className="w-full" disabled={isLoading}>
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Clear Cart
+                </Button>
+              )}
             </div>
 
             {/* Order Summary */}
@@ -180,10 +201,10 @@ const Cart = () => {
                       <span className="text-muted-foreground">Subtotal ({itemCount} items)</span>
                       <span className="font-medium">${subtotal.toFixed(2)}</span>
                     </div>
-                    {membershipDiscount > 0 && (
+                    {discountAmount > 0 && (
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">
-                          Membership Discount (5%)
+                          Discount
                         </span>
                         <span className="font-medium text-primary">-${discountAmount.toFixed(2)}</span>
                       </div>
@@ -195,7 +216,7 @@ const Cart = () => {
                     <span className="text-primary">${total.toFixed(2)}</span>
                   </div>
 
-                  <Button asChild size="lg" className="w-full">
+                  <Button asChild size="lg" className="w-full" disabled={safeCartItems.length === 0}>
                     <Link to="/checkout">
                       Proceed to Checkout <ArrowRight className="ml-2 h-5 w-5" />
                     </Link>
@@ -205,9 +226,9 @@ const Cart = () => {
                     <Link to="/categories">Continue Shopping</Link>
                   </Button>
 
-                  {membershipDiscount > 0 && (
+                  {discountAmount > 0 && (
                     <Badge className="w-full justify-center py-2">
-                      You're saving ${discountAmount.toFixed(2)} with your membership!
+                      You're saving ${discountAmount.toFixed(2)}!
                     </Badge>
                   )}
                 </CardContent>

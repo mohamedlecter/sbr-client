@@ -6,10 +6,13 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Mail, Lock, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAppDispatch } from "@/store/hooks";
+import { loginUser } from "@/store/slices/authSlice";
 
 const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const dispatch = useAppDispatch();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -17,24 +20,31 @@ const Login = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    if (email === "test@test.com" && password === "test") {
+    
+    try {
+      const result = await dispatch(loginUser({ email, password }));
+      if (loginUser.fulfilled.match(result)) {
+        toast({
+          title: "Login successful",
+          description: "Welcome back!",
+        });
+        navigate("/account");
+      } else {
+        toast({
+          title: "Login failed",
+          description: result.payload as string || "Invalid email or password",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
       toast({
-        title: "Login successful",
-        description: "Welcome back!",
+        title: "Login failed",
+        description: "An error occurred. Please try again.",
+        variant: "destructive",
       });
-      navigate("/account");
+    } finally {
       setIsLoading(false);
-      return;
     }
-    toast({
-      title: "Login failed",
-      description: "Invalid email or password",
-      variant: "destructive",
-    });
-    setIsLoading(false);
-    return;
-
-  
   };
 
   return (
