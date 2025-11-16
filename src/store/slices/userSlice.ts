@@ -140,7 +140,6 @@ const userSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Fetch profile
       .addCase(fetchProfile.pending, (state) => {
         state.isLoading = true;
         state.error = null;
