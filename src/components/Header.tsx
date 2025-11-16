@@ -70,12 +70,6 @@ const Header = () => {
                       Orders
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/account/profile" className="cursor-pointer">
-                      <Settings className="mr-2 h-4 w-4" />
-                      Settings
-                    </Link>
-                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem className="cursor-pointer text-destructive" onClick={handleLogout}>
                     <LogOut className="mr-2 h-4 w-4" />

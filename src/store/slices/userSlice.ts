@@ -169,7 +169,21 @@ const userSlice = createSlice({
       // Fetch addresses
       .addCase(fetchAddresses.fulfilled, (state, action) => {
         if (action.payload) {
-          state.addresses = Array.isArray(action.payload) ? action.payload : [];
+          const payload = action.payload as any;
+          // Handle API response structure: { addresses: [...] } or direct array
+          let addressesArray: any[] = [];
+          if (Array.isArray(payload)) {
+            addressesArray = payload;
+          } else if (Array.isArray(payload.addresses)) {
+            addressesArray = payload.addresses;
+          } else {
+            addressesArray = [];
+          }
+          // Normalize is_default from 0/1 to boolean
+          state.addresses = addressesArray.map((addr: any) => ({
+            ...addr,
+            is_default: addr.is_default === 1 || addr.is_default === true,
+          }));
         }
       })
       // Add address
@@ -177,7 +191,12 @@ const userSlice = createSlice({
         if (action.payload) {
           const address = action.payload as any;
           if (address.id && address.label && address.country && address.city && address.street) {
-            state.addresses.push(address as Address);
+            // Normalize is_default from 0/1 to boolean
+            const normalizedAddress = {
+              ...address,
+              is_default: address.is_default === 1 || address.is_default === true,
+            };
+            state.addresses.push(normalizedAddress as Address);
           }
         }
       })
@@ -188,7 +207,12 @@ const userSlice = createSlice({
           if (address.id) {
             const index = state.addresses.findIndex((addr) => addr.id === address.id);
             if (index !== -1 && address.label && address.country && address.city && address.street) {
-              state.addresses[index] = address as Address;
+              // Normalize is_default from 0/1 to boolean
+              const normalizedAddress = {
+                ...address,
+                is_default: address.is_default === 1 || address.is_default === true,
+              };
+              state.addresses[index] = normalizedAddress as Address;
             }
           }
         }
