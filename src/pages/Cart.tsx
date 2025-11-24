@@ -137,7 +137,7 @@ const Cart = () => {
                         <div className="flex-1 min-w-0">
                           <div className="flex justify-between items-start gap-2 mb-2">
                             <div className="flex-1 min-w-0">
-                              <p className="text-xs text-muted-foreground mb-1">{item.brand || 'Brand'}</p>
+                              <p className="text-xs text-muted-foreground mb-1">{item.manufacturer || 'Manufacturer'}</p>
                               <h3 className="font-bold line-clamp-2">{item.name || 'Product'}</h3>
                             </div>
                             <Button

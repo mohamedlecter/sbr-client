@@ -18,8 +18,8 @@ const ProductDetail = () => {
   const product = {
     id: id || "1",
     name: "Akrapovič Racing Titanium Exhaust System",
-    brand: "Akrapovič",
-    brandLogo: "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=200",
+    manufacturer: "Akrapovič",
+    manufacturerLogo: "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=200",
     originalPrice: 1599,
     sellingPrice: 1299,
     description:
@@ -47,21 +47,21 @@ const ProductDetail = () => {
     {
       id: 2,
       name: "Akrapovič Carbon Fiber Heat Shield",
-      brand: "Akrapovič",
+      manufacturer: "Akrapovič",
       price: 249,
       image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400",
     },
     {
       id: 3,
       name: "Akrapovič Optional Header",
-      brand: "Akrapovič",
+      manufacturer: "Akrapovič",
       price: 899,
       image: "https://images.unsplash.com/photo-1558980664-769d59546b3d?w=400",
     },
     {
       id: 4,
       name: "Akrapovič Sound Kit",
-      brand: "Akrapovič",
+      manufacturer: "Akrapovič",
       price: 179,
       image: "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?w=400",
     },
@@ -127,8 +127,8 @@ const ProductDetail = () => {
             <div className="space-y-6">
               <div>
                 <div className="flex items-center gap-3 mb-3">
-                  <img src={product.brandLogo} alt={product.brand} className="h-8 w-auto" />
-                  <span className="text-sm text-muted-foreground">{product.brand}</span>
+                  <img src={product.manufacturerLogo} alt={product.manufacturer} className="h-8 w-auto" />
+                  <span className="text-sm text-muted-foreground">{product.manufacturer}</span>
                 </div>
                 <h1 className="text-3xl md:text-4xl font-bold mb-4">{product.name}</h1>
                 <div className="flex items-center gap-4 mb-4">
@@ -239,7 +239,7 @@ const ProductDetail = () => {
                       />
                     </div>
                     <CardContent className="p-4">
-                      <p className="text-xs text-muted-foreground mb-1">{item.brand}</p>
+                      <p className="text-xs text-muted-foreground mb-1">{item.manufacturer}</p>
                       <h3 className="font-bold mb-2 line-clamp-2">{item.name}</h3>
                       <p className="text-xl font-bold text-primary">${item.price}</p>
                     </CardContent>

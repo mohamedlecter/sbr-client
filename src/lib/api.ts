@@ -170,16 +170,22 @@ export const productsApi = {
         apiRequest(`/api/products/categories${buildQueryString(params || {})}`),
     getCategoryDetails: (id: string, params?: { page?: number; limit?: number; sort?: string; order?: string }) => 
         apiRequest(`/api/products/categories/${id}${buildQueryString(params || {})}`),
-    getBrands: (params?: { page?: number; limit?: number }) => 
-        apiRequest(`/api/products/brands${buildQueryString(params || {})}`),
-    getBrandDetails: (id: string, params?: { page?: number; limit?: number; sort?: string; order?: string }) => 
-        apiRequest(`/api/products/brands/${id}${buildQueryString(params || {})}`),
+    getManufacturers: (params?: { 
+        page?: number; 
+        limit?: number; 
+        search?: string;
+        sort?: string;
+        order?: string;
+    }) => 
+        apiRequest(`/api/products/manufacturers${buildQueryString(params || {})}`),
+    getManufacturerDetails: (id: string, params?: { page?: number; limit?: number; sort?: string; order?: string }) => 
+        apiRequest(`/api/products/manufacturers/${id}${buildQueryString(params || {})}`),
     searchParts: (params?: { 
         page?: number; 
         limit?: number; 
         search?: string; 
         category_id?: string; 
-        brand_id?: string; 
+        manufacturer_id?: string; 
         min_price?: number; 
         max_price?: number; 
         color?: string; 
@@ -203,7 +209,14 @@ export const productsApi = {
     }) => 
         apiRequest(`/api/products/merchandise${buildQueryString(params || {})}`),
     getMerchandiseDetails: (id: string) => apiRequest(`/api/products/merchandise/${id}`),
-    getModels: () => apiRequest('/api/products/models'),
+    getModels: (params?: { 
+        page?: number; 
+        limit?: number; 
+        search?: string;
+        sort?: string;
+        order?: string;
+    }) => 
+        apiRequest(`/api/products/models${buildQueryString(params || {})}`),
     getModelsByMakeId: (id: string) => apiRequest(`/api/products/models/make-id/${id}`),
 }
 
@@ -238,8 +251,8 @@ export const feedbackApi = {
 
 // ==================== LEGACY APIs (for backward compatibility) ====================
 export const brandsApi = {
-    getAll: () => productsApi.getBrands(),
-    getById: (id: string) => productsApi.getBrandDetails(id),
+    getAll: () => productsApi.getManufacturers(),
+    getById: (id: string) => productsApi.getManufacturerDetails(id),
 }
 
 export const categoriesApi = {

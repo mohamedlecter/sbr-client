@@ -15,19 +15,18 @@ import Footer from "@/components/Footer";
 import TrustBadges from "@/components/TrustBadges";
 import heroImage from "@/assets/hero-motorcycle.jpg";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
-import { fetchBrands, fetchModels } from "@/store/slices/productsSlice";
+import { fetchManufacturers, fetchModels } from "@/store/slices/productsSlice";
 import { productsApi } from "@/lib/api";
 import { getImageUrl } from "@/lib/api";
 
 const Index = () => {
   const dispatch = useAppDispatch();
-  const { brands, models, isLoading } = useAppSelector((state) => state.products);
+  const { manufacturers, models, isLoading } = useAppSelector((state) => state.products);
   const [featuredProducts, setFeaturedProducts] = useState<any[]>([]);
   const [isLoadingProducts, setIsLoadingProducts] = useState(false);
 
   useEffect(() => {
-    // Fetch brands and models on component mount
-    dispatch(fetchBrands());
+    dispatch(fetchManufacturers());
     dispatch(fetchModels());
   }, [dispatch]);
 
@@ -51,9 +50,9 @@ const Index = () => {
     fetchFeaturedProducts();
   }, []);
 
-  // Extract brands and models from Redux state
+
   const bikeModels = Array.isArray(models) ? models : ((models as any)?.models || []);
-  const brandsList = Array.isArray(brands) ? brands : ((brands as any)?.brands || []);
+  const manufacturersList = Array.isArray(manufacturers) ? manufacturers : ((manufacturers as any)?.manufacturers || []);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -61,7 +60,7 @@ const Index = () => {
       
       <main>
         {/* Hero Section */}
-        <section className="relative h-[500px] md:h-[600px] flex items-center overflow-hidden">
+        <section className="relative h-[300px] md:h-[450px] flex items-center overflow-hidden">
           <div
             className="absolute inset-0 bg-cover bg-center"
             style={{ backgroundImage: `url(${heroImage})` }}
@@ -72,7 +71,7 @@ const Index = () => {
             <div className="max-w-2xl text-background">
               <h1 className="mb-6 text-4xl md:text-5xl lg:text-6xl font-bold animate-in fade-in slide-in-from-bottom-4 duration-700">
                 Shop SBR Performance <br />
-                <span className="text-primary-glow drop-shadow-lg">GO-FAST Parts!</span>
+                {/* <span className="text-primary-glow drop-shadow-lg">GO-FAST Parts!</span> */}
               </h1>
               <p className="text-xl md:text-2xl mb-8 text-background/90 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150">
                 Upgrade your ride with the finest performance parts from top brands worldwide
@@ -95,7 +94,7 @@ const Index = () => {
         <section className="py-8 bg-background">
           <div className="container mx-auto px-4">
             <div className="text-center mb-12">
-              <h2 className="">Shop by Bike Model</h2>
+              <h2 className="text-[40px] font-bold">Shop by Bike</h2>
             </div>
             <div className="relative">
               <Carousel
@@ -124,7 +123,7 @@ const Index = () => {
                             </div>
                             <CardContent className="p-4">
                               <h3 className="font-bold text-lg mb-1">{model.name}</h3>
-                              <p className="text-sm text-muted-foreground">{model.brand_name || model.year}</p>
+                              <p className="text-sm text-muted-foreground">{model.manufacturer_name || model.year}</p>
                             </CardContent>
                           </Card>
                         </Link>
@@ -150,11 +149,11 @@ const Index = () => {
           </div>
         </section>
 
-        {/* Shop by Brand - Carousel */}
+        {/* Shop by Manufacturer - Carousel */}
         <section className="py-8 bg-muted/30">
           <div className="container mx-auto px-4">
             <div className="text-center mb-12">
-              <h2 className="">Shop by Brand</h2>
+              <h2 className="text-[40px] font-bold">Shop by Manufacturer</h2>
             </div>
             <div className="relative">
               <Carousel
@@ -167,24 +166,24 @@ const Index = () => {
                 <CarouselContent className="-ml-2 md:-ml-4">
                   {isLoading ? (
                     <CarouselItem className="pl-2 md:pl-4 basis-full">
-                      <div className="text-center py-8 text-muted-foreground">Loading brands...</div>
+                      <div className="text-center py-8 text-muted-foreground">Loading manufacturers...</div>
                     </CarouselItem>
-                  ) : brandsList.length > 0 ? (
-                    brandsList.slice(0, 12).map((brand: any) => (
-                      <CarouselItem key={brand.id} className="pl-2 md:pl-4 basis-1/2 sm:basis-1/3 lg:basis-1/6">
-                        <Link to={`/brands/${brand.id}`}>
+                  ) : manufacturersList.length > 0 ? (
+                    manufacturersList.slice(0, 12).map((manufacturer: any) => (
+                      <CarouselItem key={manufacturer.id} className="pl-2 md:pl-4 basis-1/2 sm:basis-1/3 lg:basis-1/6">
+                        <Link to={`/search?manufacturer=${manufacturer.id}`}>
                           <Card className="p-6 hover:shadow-lg transition-all duration-300 hover:border-primary group h-full">
                             <div className="aspect-square flex items-center justify-center">
-                              {brand.logo_url ? (
+                              {manufacturer.logo_url ? (
                                 <img
-                                  src={getImageUrl(brand.logo_url)}
-                                  alt={brand.name}
+                                  src={getImageUrl(manufacturer.logo_url)}
+                                  alt={manufacturer.name}
                                   className="w-full h-full object-contain p-2"
                                 />
                               ) : (
                                 <div className="w-full h-full bg-muted rounded-lg flex items-center justify-center group-hover:bg-primary/10 transition-colors">
                                   <span className="font-bold text-foreground/70 group-hover:text-primary transition-colors text-center text-sm">
-                                    {brand.name}
+                                    {manufacturer.name}
                                   </span>
                                 </div>
                               )}
@@ -195,7 +194,7 @@ const Index = () => {
                     ))
                   ) : (
                     <CarouselItem className="pl-2 md:pl-4 basis-full">
-                      <div className="text-center py-8 text-muted-foreground">No brands available</div>
+                      <div className="text-center py-8 text-muted-foreground">No manufacturers available</div>
                     </CarouselItem>
                   )}
                 </CarouselContent>
@@ -205,8 +204,8 @@ const Index = () => {
             </div>
             <div className="text-center mt-8">
               <Button variant="outline" size="lg" asChild>
-                <Link to="/brands">
-                  View All Brands <ArrowRight className="ml-2 h-4 w-4" />
+                <Link to="/manufacturers">
+                  View All Manufacturers <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
             </div>
@@ -217,7 +216,7 @@ const Index = () => {
         <section className="py-16 bg-background">
           <div className="container mx-auto px-4">
             <div className="text-center mb-12">
-              <h2 className="">Featured Products</h2>
+              <h2 className="text-[40px] font-bold">Featured Products</h2>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {isLoadingProducts ? (
@@ -234,7 +233,7 @@ const Index = () => {
                         />
                       </div>
                       <CardContent className="p-4">
-                        <p className="text-xs text-muted-foreground mb-1">{product.brand_name || product.brand || 'Brand'}</p>
+                        <p className="text-xs text-muted-foreground mb-1">{product.manufacturer_name || product.manufacturer || 'Manufacturer'}</p>
                         <h3 className="font-bold mb-2 line-clamp-2">{product.name}</h3>
                         <p className="text-xl font-bold text-primary">${(product.price || product.unit_price || 0).toFixed(2)}</p>
                         <Button className="w-full mt-3" size="sm">
@@ -260,7 +259,7 @@ const Index = () => {
             <div className="text-center mb-12">
               <div className="flex items-center justify-center gap-3 mb-4">
                 <Building2 className="h-8 w-8 text-primary" />
-                <h2 className="mb-0">Trusted Partners</h2>
+                <h2 className="text-[40px] font-bold">Trusted Partners</h2>
               </div>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
                 We partner with the world's leading manufacturers to bring you authentic, high-quality parts

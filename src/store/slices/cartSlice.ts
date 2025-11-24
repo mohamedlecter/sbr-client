@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { cartApi } from '@/lib/api';
 
 interface CartItem {
@@ -9,7 +9,7 @@ interface CartItem {
   name?: string;
   price?: number;
   image?: string;
-  brand?: string;
+  manufacturer?: string;
 }
 
 interface CartSummary {

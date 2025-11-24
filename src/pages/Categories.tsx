@@ -111,20 +111,20 @@ const Categories = () => {
     const category = categories.find((c) => c.id === parseInt(id)) || categories[0];
     const Icon = category.icon;
     const categoryProducts = [
-      { id: 1, name: "Akrapovič 2017+ Suzuki GSXR1000R/RR Evolution Line Titanium Full System", brand: "Akrapovič", price: 9800, image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400", inStock: true },
-      { id: 2, name: "Brocks Performance CT Megaphone Full System w/ 17\" Muffler GSX-R1000/R (17-25)", brand: "Brocks Performance", price: 8600, image: "https://images.unsplash.com/photo-1558980664-769d59546b3d?w=400", inStock: true },
-      { id: 3, name: "Akrapovič 2021+ Suzuki Hayabusa Racing Line Exhaust", brand: "Akrapovič", price: 7100, image: "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?w=400", inStock: false },
-      { id: 4, name: "Yoshimura R-77 Exhaust System", brand: "Yoshimura", price: 5500, image: "https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=400", inStock: true },
-      { id: 5, name: "SC Project S1 Exhaust", brand: "SC Project", price: 4200, image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400", inStock: false },
-      { id: 6, name: "Arrow Pro-Race Exhaust", brand: "Arrow", price: 3800, image: "https://images.unsplash.com/photo-1558980664-769d59546b3d?w=400", inStock: true },
-      { id: 7, name: "Termignoni Exhaust System", brand: "Termignoni", price: 6200, image: "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?w=400", inStock: false },
-      { id: 8, name: "Two Brothers Exhaust", brand: "Two Brothers", price: 2900, image: "https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=400", inStock: true },
+      { id: 1, name: "Akrapovič 2017+ Suzuki GSXR1000R/RR Evolution Line Titanium Full System", manufacturer: "Akrapovič", price: 9800, image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400", inStock: true },
+      { id: 2, name: "Brocks Performance CT Megaphone Full System w/ 17\" Muffler GSX-R1000/R (17-25)", manufacturer: "Brocks Performance", price: 8600, image: "https://images.unsplash.com/photo-1558980664-769d59546b3d?w=400", inStock: true },
+      { id: 3, name: "Akrapovič 2021+ Suzuki Hayabusa Racing Line Exhaust", manufacturer: "Akrapovič", price: 7100, image: "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?w=400", inStock: false },
+      { id: 4, name: "Yoshimura R-77 Exhaust System", manufacturer: "Yoshimura", price: 5500, image: "https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=400", inStock: true },
+      { id: 5, name: "SC Project S1 Exhaust", manufacturer: "SC Project", price: 4200, image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400", inStock: false },
+      { id: 6, name: "Arrow Pro-Race Exhaust", manufacturer: "Arrow", price: 3800, image: "https://images.unsplash.com/photo-1558980664-769d59546b3d?w=400", inStock: true },
+      { id: 7, name: "Termignoni Exhaust System", manufacturer: "Termignoni", price: 6200, image: "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?w=400", inStock: false },
+      { id: 8, name: "Two Brothers Exhaust", manufacturer: "Two Brothers", price: 2900, image: "https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=400", inStock: true },
     ];
 
     const filteredProducts = categoryProducts.filter((product) => {
       const matchesSearch = searchQuery === "" || 
         product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.brand.toLowerCase().includes(searchQuery.toLowerCase());
+        product.manufacturer.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesStock = (inStock && product.inStock) || (outOfStock && !product.inStock);
       const matchesPrice = product.price >= priceRange[0] && product.price <= priceRange[1];
       return matchesSearch && matchesStock && matchesPrice;
@@ -419,7 +419,7 @@ const Categories = () => {
                           />
                         </div>
                         <CardContent className="p-4">
-                          <p className="text-xs text-muted-foreground mb-1">{product.brand}</p>
+                          <p className="text-xs text-muted-foreground mb-1">{product.manufacturer}</p>
                           <h3 className="font-bold mb-2 line-clamp-2 text-sm">{product.name}</h3>
                           <p className="text-xl font-bold text-primary">QAR {product.price.toLocaleString()},00</p>
                         </CardContent>

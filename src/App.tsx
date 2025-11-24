@@ -7,8 +7,9 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { store } from "./store/store";
 import Index from "./pages/Index";
 import Categories from "./pages/Categories";
-import Brands from "./pages/Brands";
+import Manufacturers from "./pages/Manufacturers";
 import BikeModels from "./pages/BikeModels";
+import BikeModelDetails from "./pages/BikeModelDetails";
 import ProductDetail from "./pages/ProductDetail";
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
@@ -42,10 +43,10 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/categories" element={<Categories />} />
             <Route path="/categories/:id" element={<Categories />} />
-            <Route path="/brands" element={<Brands />} />
-            <Route path="/brands/:id" element={<Brands />} />
+            <Route path="/manufacturers" element={<Manufacturers />} />
+            {/* <Route path="/manufacturers/:id" element={< />} /> */}
             <Route path="/bike-models" element={<BikeModels />} />
-            <Route path="/bike-models/:id" element={<BikeModels />} />
+            <Route path="/bike-models/:id" element={<BikeModelDetails />} />
             <Route path="/products/parts/:id" element={<ProductDetail />} />
             <Route path="/products/merchandise/:id" element={<ProductDetail />} />
             <Route path="/search" element={<Search />} />

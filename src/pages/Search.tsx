@@ -14,7 +14,7 @@ import { Search as SearchIcon, SlidersHorizontal, X } from "lucide-react";
 const Search = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
-  const [selectedBrand, setSelectedBrand] = useState("all");
+  const [selectedManufacturer, setSelectedManufacturer] = useState("all");
   const [priceRange, setPriceRange] = useState([0, 5000]);
   const [selectedColor, setSelectedColor] = useState("all");
   const [inStockOnly, setInStockOnly] = useState(false);
@@ -23,14 +23,14 @@ const Search = () => {
   const [showFilters, setShowFilters] = useState(true);
 
   const categories = ["Exhaust Systems", "Suspension", "Braking", "Engine Parts"];
-  const brands = ["Akrapovič", "Brembo", "Öhlins", "K&N", "Yoshimura"];
+  const manufacturers = ["Akrapovič", "Brembo", "Öhlins", "K&N", "Yoshimura"];
   const colors = ["Black", "Silver", "Titanium", "Red", "Blue"];
 
   const products = [
     {
       id: 1,
       name: "Akrapovič Racing Exhaust",
-      brand: "Akrapovič",
+      manufacturer: "Akrapovič",
       price: 1299,
       originalPrice: 1599,
       image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400",
@@ -40,7 +40,7 @@ const Search = () => {
     {
       id: 2,
       name: "Brembo Brake Caliper Set",
-      brand: "Brembo",
+      manufacturer: "Brembo",
       price: 899,
       originalPrice: null,
       image: "https://images.unsplash.com/photo-1558980664-769d59546b3d?w=400",
@@ -50,7 +50,7 @@ const Search = () => {
     {
       id: 3,
       name: "Öhlins TTX Shock",
-      brand: "Öhlins",
+      manufacturer: "Öhlins",
       price: 1599,
       originalPrice: null,
       image: "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?w=400",
@@ -60,7 +60,7 @@ const Search = () => {
     {
       id: 4,
       name: "K&N Air Filter Kit",
-      brand: "K&N",
+      manufacturer: "K&N",
       price: 149,
       originalPrice: null,
       image: "https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=400",
@@ -102,7 +102,7 @@ const Search = () => {
                         size="sm"
                         onClick={() => {
                           setSelectedCategory("all");
-                          setSelectedBrand("all");
+                          setSelectedManufacturer("all");
                           setPriceRange([0, 5000]);
                           setSelectedColor("all");
                           setInStockOnly(false);
@@ -130,16 +130,16 @@ const Search = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <Label>Brand</Label>
-                      <Select value={selectedBrand} onValueChange={setSelectedBrand}>
+                      <Label>Manufacturer</Label>
+                      <Select value={selectedManufacturer} onValueChange={setSelectedManufacturer}>
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="all">All Brands</SelectItem>
-                          {brands.map((brand) => (
-                            <SelectItem key={brand} value={brand}>
-                              {brand}
+                          <SelectItem value="all">All Manufacturers</SelectItem>
+                          {manufacturers.map((manufacturer) => (
+                            <SelectItem key={manufacturer} value={manufacturer}>
+                              {manufacturer}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -218,7 +218,7 @@ const Search = () => {
               </div>
 
               {/* Products */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {products.map((product) => (
                   <Link key={product.id} to={`/products/parts/${product.id}`}>
                     <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 group h-full">
@@ -230,20 +230,20 @@ const Search = () => {
                         />
                         {!product.inStock && (
                           <div className="absolute inset-0 bg-foreground/80 flex items-center justify-center">
-                            <span className="text-background font-bold">Out of Stock</span>
+                            <span className="text-background font-bold text-sm">Out of Stock</span>
                           </div>
                         )}
                       </div>
-                      <CardContent className="p-4">
-                        <p className="text-xs text-muted-foreground mb-1">{product.brand}</p>
-                        <h3 className="font-bold mb-2 line-clamp-2">{product.name}</h3>
+                      <CardContent className="p-3">
+                        <p className="text-xs text-muted-foreground mb-1">{product.manufacturer}</p>
+                        <h3 className="font-bold text-sm mb-1 line-clamp-2">{product.name}</h3>
                         <div className="flex items-baseline gap-2">
                           {product.originalPrice && (
-                            <span className="text-sm text-muted-foreground line-through">
+                            <span className="text-xs text-muted-foreground line-through">
                               ${product.originalPrice}
                             </span>
                           )}
-                          <span className="text-xl font-bold text-primary">${product.price}</span>
+                          <span className="text-lg font-bold text-primary">${product.price}</span>
                         </div>
                       </CardContent>
                     </Card>
