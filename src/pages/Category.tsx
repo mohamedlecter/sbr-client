@@ -1,6 +1,7 @@
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
@@ -26,13 +27,14 @@ import {
 } from "@/components/ui/drawer";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { Filter, Trash2, ChevronUp, Grid3x3, List, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, Filter, Trash2, ChevronUp, Grid3x3, List, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { fetchCategories } from "@/store/slices/productsSlice";
 import { productsApi, getImageUrl } from "@/lib/api";
+import { Wrench, Bike, Sparkles, Zap, Shield, Wind, Package } from "lucide-react";
 
-const CategoriesPage = () => {
+const Category = () => {
+  const { id } = useParams();
+  const [category, setCategory] = useState<any>(null);
   const [products, setProducts] = useState<any[]>([]);
   const [pagination, setPagination] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -40,29 +42,104 @@ const CategoriesPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortBy, setSortBy] = useState("name");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
-  const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [inStock, setInStock] = useState(true);
-  const [outOfStock, setOutOfStock] = useState(true);
+  const [outOfStock, setOutOfStock] = useState(false);
   const [priceRange, setPriceRange] = useState([0, 10000]);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [isLoadingProducts, setIsLoadingProducts] = useState(false);
-  const dispatch = useAppDispatch();
-  const { categories, isLoading } = useAppSelector((state) => state.products);
+  const [isLoading, setIsLoading] = useState(false);
 
+  // Map category names to icons
+  const getCategoryIcon = (categoryName: string) => {
+    const name = categoryName?.toLowerCase() || "";
+    if (name.includes('exhaust')) return Wind;
+    if (name.includes('suspension')) return Bike;
+    if (name.includes('brake')) return Shield;
+    if (name.includes('engine')) return Zap;
+    if (name.includes('body') || name.includes('fairing')) return Sparkles;
+    if (name.includes('wheel') || name.includes('tire')) return Wrench;
+    if (name.includes('accessor')) return Package;
+    if (name.includes('chassis')) return Bike;
+    if (name.includes('driveline')) return Zap;
+    if (name.includes('electron')) return Zap;
+    if (name.includes('carbon')) return Sparkles;
+    return Wrench;
+  };
 
-
+  // Fetch category details
   useEffect(() => {
-    dispatch(fetchCategories({
-      page: 1,
-      limit: 100,
-      sort: "name",
-      order: "asc"
-    }));
-  }, [dispatch]);
+    if (!id) return;
+    
+    const fetchCategory = async () => {
+      setIsLoading(true);
+      try {
+        const response = await productsApi.getCategoryDetails(id);
+        if (response.data) {
+          const data = response.data as any;
+          setCategory(Array.isArray(data) ? data[0] : data);
+        }
+      } catch (error) {
+        console.error('Error fetching category:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  // Fetch all products from all categories
-  
- 
+    fetchCategory();
+  }, [id]);
+
+  // Fetch products
+  useEffect(() => {
+    if (!id) return;
+
+    const fetchProducts = async () => {
+      setIsLoading(true);
+      try {
+        const params: any = {
+          page: currentPage,
+          limit: 20,
+          category_id: id,
+          sort: sortBy,
+          order: sortOrder,
+        };
+
+        if (activeSearch) {
+          params.search = activeSearch;
+        }
+
+        if (inStock && !outOfStock) {
+          params.in_stock = true;
+        } else if (!inStock && outOfStock) {
+          params.in_stock = false;
+        }
+
+        if (priceRange[0] > 0) {
+          params.min_price = priceRange[0];
+        }
+        if (priceRange[1] < 10000) {
+          params.max_price = priceRange[1];
+        }
+
+        const response = await productsApi.searchParts(params);
+        if (response.data) {
+          const data = response.data as any;
+          if (Array.isArray(data)) {
+            setProducts(data);
+            setPagination(null);
+          } else {
+            setProducts(data.parts || []);
+            setPagination(data.pagination || null);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching products:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, [id, currentPage, activeSearch, sortBy, sortOrder, inStock, outOfStock, priceRange]);
+
   const handleSearch = () => {
     setActiveSearch(searchQuery);
     setCurrentPage(1);
@@ -74,15 +151,44 @@ const CategoriesPage = () => {
   };
 
   const handleClearAll = () => {
-    setSelectedCategory("all");
     setInStock(true);
-    setOutOfStock(true);
+    setOutOfStock(false);
     setPriceRange([0, 10000]);
     setSearchQuery("");
     setActiveSearch("");
     setCurrentPage(1);
   };
 
+  if (isLoading && !category) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main className="flex-1 flex items-center justify-center">
+          <p>Loading...</p>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (!category) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold mb-4">Category not found</h1>
+            <Button asChild>
+              <Link to="/categories">Back to Categories</Link>
+            </Button>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  const Icon = getCategoryIcon(category.name);
   const inStockCount = products.filter((p) => p.in_stock !== false).length;
   const outOfStockCount = products.filter((p) => p.in_stock === false).length;
 
@@ -92,14 +198,30 @@ const CategoriesPage = () => {
 
       <main className="flex-1 py-8">
         <div className="container mx-auto px-4">
-          {/* Page Header */}
+          <div className="mb-6">
+            <Button variant="ghost" asChild>
+              <Link to="/categories">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to Categories
+              </Link>
+            </Button>
+          </div>
+
+          {/* Category Header */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold mb-2">All Categories</h1>
-            <p className="text-muted-foreground">
-              Browse products from all categories
-            </p>
+            <div className="flex items-center gap-4 mb-4">
+              <div className="bg-primary p-4 rounded-full">
+                <Icon className="h-8 w-8 text-primary-foreground" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold">{category.name}</h1>
+                {category.description && (
+                  <p className="text-muted-foreground mt-2">{category.description}</p>
+                )}
+              </div>
+            </div>
             {pagination && (
-              <p className="text-muted-foreground mt-2">
+              <p className="text-muted-foreground">
                 {pagination.total} products found
               </p>
             )}
@@ -129,25 +251,28 @@ const CategoriesPage = () => {
 
                 {/* Search Filter */}
                 <div>
-                 
-                </div>
-
-                {/* Category Filter */}
-                <div>
-                  <Label className="text-sm font-bold uppercase tracking-wide mb-3 block">CATEGORY</Label>
-                  <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="All Categories" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Categories</SelectItem>
-                      {categories.map((category: any) => (
-                        <SelectItem key={category.id} value={category.id}>
-                          {category.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="relative mb-2">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      type="search"
+                      placeholder="Search products..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          handleSearch();
+                        }
+                      }}
+                      className="pl-10 h-9"
+                    />
+                  </div>
+                  <Button
+                    size="sm"
+                    onClick={handleSearch}
+                    className="w-full mt-2"
+                  >
+                    Search
+                  </Button>
                 </div>
 
                 {/* Availability Filter */}
@@ -277,24 +402,6 @@ const CategoriesPage = () => {
                           </Button>
                         </div>
 
-                        {/* Category Filter */}
-                        <div>
-                          <Label className="text-sm font-bold uppercase tracking-wide mb-3 block">CATEGORY</Label>
-                          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                            <SelectTrigger className="w-full">
-                              <SelectValue placeholder="All Categories" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="all">All Categories</SelectItem>
-                              {categories.map((category: any) => (
-                                <SelectItem key={category.id} value={category.id}>
-                                  {category.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-
                         <Collapsible defaultOpen>
                           <CollapsibleTrigger className="w-full flex items-center justify-between mb-3">
                             <span className="font-bold text-sm uppercase tracking-wide">AVAILABILITY</span>
@@ -404,7 +511,7 @@ const CategoriesPage = () => {
               </div>
 
               {/* Products Grid */}
-              {isLoadingProducts ? (
+              {isLoading ? (
                 <div className="text-center py-12">
                   <p className="text-muted-foreground">Loading products...</p>
                 </div>
@@ -495,4 +602,5 @@ const CategoriesPage = () => {
   );
 };
 
-export default CategoriesPage;
+export default Category;
+

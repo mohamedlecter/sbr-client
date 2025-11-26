@@ -166,7 +166,7 @@ export const ordersApi = {
 
 // ==================== PRODUCTS APIs ====================
 export const productsApi = {
-    getCategories: (params?: { include_children?: 'true' }) => 
+    getCategories: (params?: { include_children?: 'true'; page?: number; limit?: number; sort?: string; order?: string }) => 
         apiRequest(`/api/products/categories${buildQueryString(params || {})}`),
     getCategoryDetails: (id: string, params?: { page?: number; limit?: number; sort?: string; order?: string }) => 
         apiRequest(`/api/products/categories/${id}${buildQueryString(params || {})}`),
@@ -193,6 +193,22 @@ export const productsApi = {
         order?: string; 
         in_stock?: boolean 
     }) => 
+        apiRequest(`/api/products/parts${buildQueryString(params || {})}`),
+    getPartsByCategory: (category_id: string, params?: { 
+        page?: number; 
+        limit?: number; 
+        search?: string; 
+        manufacturer_id?: string; 
+        min_price?: number; 
+        max_price?: number; 
+        color?: string; 
+        sort?: string; 
+        order?: string; 
+        in_stock?: boolean 
+        category_id?: string;
+    }) => 
+        category_id && category_id !== 'all' ?
+        apiRequest(`/api/products/parts/category/${category_id}${buildQueryString(params || {})}`) :
         apiRequest(`/api/products/parts${buildQueryString(params || {})}`),
     getPartDetails: (id: string) => apiRequest(`/api/products/parts/${id}`),
     getMerchandise: (params?: { 

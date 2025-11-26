@@ -35,7 +35,7 @@ const Index = () => {
     const fetchFeaturedProducts = async () => {
       setIsLoadingProducts(true);
       try {
-        const response = await productsApi.searchParts({ limit: 4 });
+        const response = await productsApi.getPartsByCategory("all");
         if (response.data) {
           const data = response.data as any;
           const products = Array.isArray(data) ? data : (data.parts || []);
