@@ -125,12 +125,12 @@ const CategoriesPage = () => {
     <div className="min-h-screen flex flex-col">
       <Header />
 
-      <main className="flex-1 py-8">
-        <div className="container mx-auto px-4">
+      <main className="flex-1 py-4 sm:py-6 lg:py-8">
+        <div className="container mx-auto px-4 sm:px-6">
 
-          <div className="flex gap-6">
+          <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
             {/* Left Sidebar - Filters */}
-            <aside className="w-64 shrink-0 hidden lg:block">
+            <aside className="w-full lg:w-64 shrink-0 hidden lg:block">
               <div className="sticky top-24 space-y-6">
                 <div>
                   <div className="flex items-center justify-between mb-4">
@@ -437,7 +437,7 @@ const CategoriesPage = () => {
                 </div>
               ) : (
                 <>
-                  <div className={viewMode === "grid" ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6" : "space-y-4"}>
+                  <div className={viewMode === "grid" ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6" : "space-y-4"}>
                     {parts.map((part: any) => {
                       const imageUrl = part.images && part.images.length > 0 ? part.images[0] : null;
                       const isInStock = (part.quantity || 0) > 0;

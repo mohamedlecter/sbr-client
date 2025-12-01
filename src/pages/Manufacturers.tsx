@@ -94,11 +94,11 @@ const Manufacturers = () => {
             </div>
           </div>
 
-          <div className="flex gap-8">
+          <div className="flex flex-col lg:flex-row gap-4 lg:gap-8">
             {/* Filters Sidebar */}
-              <div className="w-64 shrink-0">
+              <div className="w-full lg:w-64 shrink-0">
                 <Card className="sticky top-24">
-                  <CardContent className="p-6 space-y-6">
+                  <CardContent className="p-4 sm:p-6 space-y-4 sm:space-y-6">
                     <div className="flex items-center justify-between">
                       <h2 className="font-bold text-lg">Filters</h2>
                       <Button
@@ -147,10 +147,10 @@ const Manufacturers = () => {
               </div>
 
             {/* Manufacturers Grid */}
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               {/* Results Count & Filter Toggle */}
-              <div className="flex items-center justify-between mb-3">
-                <p className="text-muted-foreground">
+              <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+                <p className="text-sm sm:text-base text-muted-foreground">
                   {isLoading ? (
                     "Loading manufacturers..."
                   ) : manufacturersPagination ? (
@@ -168,17 +168,17 @@ const Manufacturers = () => {
               ) : (
                 <>
                   {/* Manufacturers */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
                     {manufacturers.map((manufacturer) => (
                       <Link key={manufacturer.id} to={`/manufacturers/${manufacturer.id}`}>
                         <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 group h-full">
-                          <div className="aspect-square bg-muted rounded-lg mb-3 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
-                            <span className="font-bold text-lg text-foreground/70 group-hover:text-primary transition-colors">
+                          <div className="aspect-square bg-muted rounded-lg mb-2 sm:mb-3 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+                            <span className="font-bold text-sm sm:text-lg text-foreground/70 group-hover:text-primary transition-colors px-2 text-center line-clamp-2">
                               {manufacturer.name}
                             </span>
                           </div>
-                          <CardContent className="p-3">
-                            <h3 className="font-bold text-sm mb-1">{manufacturer.name}</h3>
+                          <CardContent className="p-2 sm:p-3">
+                            <h3 className="font-bold text-xs sm:text-sm mb-1 line-clamp-1">{manufacturer.name}</h3>
                             {manufacturer.description && (
                               <p className="text-xs text-muted-foreground mb-3 line-clamp-2">{manufacturer.description}</p>
                             )}

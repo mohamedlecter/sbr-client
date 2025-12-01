@@ -155,8 +155,8 @@ const Index = () => {
         {/* Shop by Bike Model - Carousel */}
         <section className="py-8 bg-background">
           <div className="container mx-auto px-4">
-            <div className="text-center mb-12">
-              <h2 className="text-[40px] font-bold">Shop by Bike</h2>
+            <div className="text-center mb-8 sm:mb-12">
+              <h2 className="text-2xl sm:text-3xl lg:text-[40px] font-bold">Shop by Bike</h2>
             </div>
             <div className="relative">
               <Carousel
@@ -215,8 +215,8 @@ const Index = () => {
         {/* Shop by Manufacturer - Carousel */}
         <section className="py-8 bg-muted/30">
           <div className="container mx-auto px-4">
-            <div className="text-center mb-12">
-              <h2 className="text-[40px] font-bold">Shop by Manufacturer</h2>
+            <div className="text-center mb-8 sm:mb-12">
+              <h2 className="text-2xl sm:text-3xl lg:text-[40px] font-bold">Shop by Manufacturer</h2>
             </div>
             <div className="relative">
               <Carousel
@@ -277,12 +277,12 @@ const Index = () => {
         </section>
 
         {/* Featured Products */}
-        <section className="py-16 bg-background">
+        <section className="py-8 sm:py-12 lg:py-16 bg-background">
           <div className="container mx-auto px-4">
-            <div className="text-center mb-12">
-              <h2 className="text-[40px] font-bold">Featured Products</h2>
+            <div className="text-center mb-8 sm:mb-12">
+              <h2 className="text-2xl sm:text-3xl lg:text-[40px] font-bold">Featured Products</h2>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 lg:gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-3 lg:gap-4">
               {isLoadingProducts ? (
                 <div className="col-span-full text-center py-8 text-muted-foreground">Loading featured products...</div>
               ) : featuredProducts.length > 0 ? (

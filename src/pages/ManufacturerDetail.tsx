@@ -212,9 +212,9 @@ const ManufacturerDetail = () => {
             </div>
           )}
 
-          <div className="flex gap-6">
+          <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
             {/* Left Sidebar - Filters */}
-            <aside className="w-64 shrink-0 hidden lg:block">
+            <aside className="w-full lg:w-64 shrink-0 hidden lg:block">
               <div className="sticky top-24 space-y-6">
                 <div>
                   <div className="flex items-center justify-between mb-4">
@@ -235,7 +235,7 @@ const ManufacturerDetail = () => {
                 </div>
 
                 {/* Search Filter */}
-                <div>
+                <div className="hidden lg:block">
                   <Label className="text-sm font-bold uppercase tracking-wide mb-3 block">SEARCH</Label>
                   <div className="relative mb-2">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -362,8 +362,8 @@ const ManufacturerDetail = () => {
                           CLEAR ALL
                         </Button>
 
-                        {/* Search Filter */}
-                        <div>
+                        {/* Search Filter - Hidden on mobile */}
+                        <div className="hidden">
                           <Label className="text-sm font-bold uppercase tracking-wide mb-3 block">SEARCH</Label>
                           <div className="relative mb-2">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />

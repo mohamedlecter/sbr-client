@@ -154,28 +154,30 @@ const ProductDetail = () => {
       <main className="flex-1 py-6 lg:py-8">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
           {/* Breadcrumb */}
-          <nav className="mb-4 lg:mb-6 text-sm text-muted-foreground">
-            <Link to="/" className="hover:text-primary">
-              Home
-            </Link>
-            <span className="mx-2">/</span>
-            <Link to="/categories" className="hover:text-primary">
-              Categories
-            </Link>
-            {product.category_id && (
-              <>
-                <span className="mx-2">/</span>
-                <Link to={`/categories/${product.category_id}`} className="hover:text-primary">
-                  {product.category_name || 'Category'}
-                </Link>
-              </>
-            )}
-            <span className="mx-2">/</span>
-            <span className="text-foreground">{product.name}</span>
+          <nav className="mb-4 lg:mb-6 text-xs sm:text-sm text-muted-foreground overflow-x-auto">
+            <div className="flex items-center whitespace-nowrap">
+              <Link to="/" className="hover:text-primary">
+                Home
+              </Link>
+              <span className="mx-1 sm:mx-2">/</span>
+              <Link to="/categories" className="hover:text-primary">
+                Categories
+              </Link>
+              {product.category_id && (
+                <>
+                  <span className="mx-1 sm:mx-2">/</span>
+                  <Link to={`/categories/${product.category_id}`} className="hover:text-primary">
+                    {product.category_name || 'Category'}
+                  </Link>
+                </>
+              )}
+              <span className="mx-1 sm:mx-2">/</span>
+              <span className="text-foreground truncate max-w-[150px] sm:max-w-none">{product.name}</span>
+            </div>
           </nav>
 
           {/* Product Info */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 xl:gap-12 mb-12 lg:mb-16">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 xl:gap-12 mb-8 sm:mb-12 lg:mb-16">
             {/* Image Gallery */}
             <div className="space-y-3 lg:space-y-4">
               <div className="aspect-square rounded-lg overflow-hidden bg-muted max-w-full mx-auto lg:mx-0">

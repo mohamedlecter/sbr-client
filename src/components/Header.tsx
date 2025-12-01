@@ -41,45 +41,47 @@ const Header = () => {
     <header className="sticky top-0 z-50 bg-background border-b border-border shadow-sm">
       <div className="container mx-auto px-4">
         {/* Top Bar */}
-        <div className="flex items-center justify-between py-3 border-b border-border/50">
-          <div className="flex items-center gap-2 justify-between">
-            <div className="flex gap-1">
+        <div className="flex items-center justify-between py-2 sm:py-3 border-b border-border/50">
+          <div className="flex items-center gap-1 sm:gap-2 flex-1 min-w-0">
+            <div className="flex gap-1 shrink-0">
               <a
                 href="#"
-                className="bg-background/10 hover:bg-primary p-2 rounded-full transition-colors"
+                className="bg-background/10 hover:bg-primary p-1.5 sm:p-2 rounded-full transition-colors"
                 aria-label="Facebook"
               >
-                <Facebook className="h-4 w-4" />
+                <Facebook className="h-3 w-3 sm:h-4 sm:w-4" />
               </a>
               <a
                 href="#"
-                className="bg-background/10 hover:bg-primary p-2 rounded-full transition-colors"
+                className="bg-background/10 hover:bg-primary p-1.5 sm:p-2 rounded-full transition-colors"
                 aria-label="Instagram"
               >
-                <Instagram className="h-4 w-4" />
+                <Instagram className="h-3 w-3 sm:h-4 sm:w-4" />
               </a>
               <a
                 href="#"
-                className="bg-background/10 hover:bg-primary p-2 rounded-full transition-colors"
+                className="bg-background/10 hover:bg-primary p-1.5 sm:p-2 rounded-full transition-colors hidden sm:block"
                 aria-label="Twitter"
               >
-                <Twitter className="h-4 w-4" />
+                <Twitter className="h-3 w-3 sm:h-4 sm:w-4" />
               </a>
               <a
                 href="#"
-                className="bg-background/10 hover:bg-primary p-2 rounded-full transition-colors"
+                className="bg-background/10 hover:bg-primary p-1.5 sm:p-2 rounded-full transition-colors hidden sm:block"
                 aria-label="YouTube"
               >
-                <Youtube className="h-4 w-4" />
+                <Youtube className="h-3 w-3 sm:h-4 sm:w-4" />
               </a>
             </div>
-            <span className="text-sm text-muted-foreground">Hotline:</span>
-            <a href="tel:+1234567890" className="text-sm font-semibold text-primary hover:text-primary-light transition-colors">
-              +974 5000 0000
-            </a>
+            <div className="flex items-center gap-1 sm:gap-2 ml-1 sm:ml-2 min-w-0">
+              <span className="text-xs sm:text-sm text-muted-foreground hidden xs:inline">Hotline:</span>
+              <a href="tel:+1234567890" className="text-xs sm:text-sm font-semibold text-primary hover:text-primary-light transition-colors whitespace-nowrap">
+                +974 5000 0000
+              </a>
+            </div>
           </div>
           
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4 shrink-0">
             <Link to="/cart">
               <Button variant="ghost" size="sm" className="relative flex items-center gap-1">
                 <ShoppingCart className="h-4 w-4" />
@@ -133,24 +135,24 @@ const Header = () => {
         {/* Main Navigation */}
         <div className="flex items-center justify-between py-4">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <div className="bg-primary text-primary-foreground font-bold text-2xl px-3 py-1 rounded shadow-lg">
+          <Link to="/" className="flex items-center gap-1 sm:gap-2 hover:opacity-80 transition-opacity shrink-0">
+            <div className="bg-primary text-primary-foreground font-bold text-xl sm:text-2xl px-2 sm:px-3 py-1 rounded shadow-lg">
               SBR
             </div>
-            <span className="font-bold text-xl hidden sm:inline bg-gradient-to-r from-primary to-primary-light bg-clip-text text-transparent">
+            <span className="font-bold text-lg sm:text-xl hidden sm:inline bg-gradient-to-r from-primary to-primary-light bg-clip-text text-transparent">
               Performance
             </span>
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center gap-4 flex-1">
-            <Link to="/bike-models" className="font-medium hover:text-primary transition-colors ml-4">
+          <nav className="hidden lg:flex items-center gap-3 xl:gap-4 flex-1 max-w-2xl">
+            <Link to="/bike-models" className="font-medium hover:text-primary transition-colors ml-2 xl:ml-4 text-sm xl:text-base whitespace-nowrap">
               Shop by Bike Model
             </Link>
-            <Link to="/manufacturers" className="font-medium hover:text-primary transition-colors">
+            <Link to="/manufacturers" className="font-medium hover:text-primary transition-colors text-sm xl:text-base whitespace-nowrap">
               Shop by Manufacturers
             </Link>
-            <Link to="/categories" className="font-medium hover:text-primary transition-colors">
+            <Link to="/categories" className="font-medium hover:text-primary transition-colors text-sm xl:text-base whitespace-nowrap">
               Shop by Category
             </Link>
           </nav>
@@ -214,45 +216,7 @@ const Header = () => {
 
         {/* Mobile Search */}
         <div className="md:hidden pb-3">
-          {showSearchInput ? (
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                if (searchQuery.trim()) {
-                  window.location.href = `/search?q=${encodeURIComponent(searchQuery)}`;
-                  setShowSearchInput(false);
-                }
-              }}
-              className="relative"
-            >
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Search for parts..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onBlur={() => {
-                  setTimeout(() => {
-                    if (!searchQuery.trim()) {
-                      setShowSearchInput(false);
-                    }
-                  }, 200);
-                }}
-                autoFocus
-                className="pl-10"
-              />
-            </form>
-          ) : (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowSearchInput(true)}
-              className="w-full justify-start"
-            >
-              <Search className="h-4 w-4 mr-2" />
-              Search for parts...
-            </Button>
-          )}
+      
         </div>
 
         {/* Mobile Navigation */}

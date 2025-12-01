@@ -126,14 +126,14 @@ const Cart = () => {
 
       <main className="flex-1 py-8">
         <div className="container mx-auto px-4">
-          <div className="mb-8">
-            <h1 className="text-3xl md:text-4xl font-bold mb-2">Shopping Cart</h1>
-            <p className="text-muted-foreground">Review your items before checkout</p>
+          <div className="mb-6 sm:mb-8">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2">Shopping Cart</h1>
+            <p className="text-sm sm:text-base text-muted-foreground">Review your items before checkout</p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
             {/* Cart Items */}
-            <div className="lg:col-span-2 space-y-4">
+            <div className="lg:col-span-2 space-y-3 sm:space-y-4">
               {isLoading ? (
                 <div className="text-center py-8 text-muted-foreground">Loading cart...</div>
               ) : (
@@ -144,9 +144,9 @@ const Cart = () => {
                   
                   return (
                     <Card key={item.id} className="hover:shadow-lg transition-shadow">
-                      <CardContent className="p-4">
-                        <div className="flex gap-4">
-                          <div className="w-24 h-24 rounded-lg overflow-hidden bg-muted shrink-0 border border-border">
+                      <CardContent className="p-3 sm:p-4">
+                        <div className="flex gap-3 sm:gap-4">
+                          <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden bg-muted shrink-0 border border-border">
                             <img 
                               src={getImageUrl(itemImage)} 
                               alt={item.name || 'Product'} 
@@ -168,7 +168,7 @@ const Cart = () => {
                                 <Trash2 className="h-4 w-4 text-destructive" />
                               </Button>
                             </div>
-                            <div className="flex items-center justify-between mt-4">
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-3 sm:mt-4 gap-3">
                               <div className="flex items-center border rounded-lg">
                                 <Button
                                   variant="ghost"
@@ -189,9 +189,9 @@ const Cart = () => {
                                   <Plus className="h-3 w-3" />
                                 </Button>
                               </div>
-                              <div className="text-right">
-                                <p className="font-bold text-lg">QAR {itemTotal.toLocaleString()}</p>
-                                <p className="text-xs text-muted-foreground">QAR {itemPrice.toLocaleString()} each</p>
+                              <div className="text-left sm:text-right">
+                                <p className="font-bold text-base sm:text-lg text-primary">QAR {itemTotal.toLocaleString()}</p>
+                                <p className="text-xs sm:text-sm text-muted-foreground">QAR {itemPrice.toLocaleString()} each</p>
                               </div>
                             </div>
                           </div>

@@ -196,10 +196,10 @@ const Category = () => {
     <div className="min-h-screen flex flex-col">
       <Header />
 
-      <main className="flex-1 py-8">
-        <div className="container mx-auto px-4">
-          <div className="mb-6">
-            <Button variant="ghost" asChild>
+      <main className="flex-1 py-4 sm:py-6 lg:py-8">
+        <div className="container mx-auto px-4 sm:px-6">
+          <div className="mb-4 sm:mb-6">
+            <Button variant="ghost" size="sm" asChild>
               <Link to="/categories">
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Back to Categories
@@ -227,9 +227,9 @@ const Category = () => {
             )}
           </div>
 
-          <div className="flex gap-6">
+          <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
             {/* Left Sidebar - Filters */}
-            <aside className="w-64 shrink-0 hidden lg:block">
+            <aside className="w-full lg:w-64 shrink-0 hidden lg:block">
               <div className="sticky top-24 space-y-6">
                 <div>
                   <div className="flex items-center justify-between mb-4">
@@ -376,8 +376,8 @@ const Category = () => {
                           CLEAR ALL
                         </Button>
 
-                        {/* Search Filter */}
-                        <div>
+                        {/* Search Filter - Hidden on mobile */}
+                        <div className="hidden">
                           <div className="relative mb-2">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                             <Input
@@ -521,7 +521,7 @@ const Category = () => {
                 </div>
               ) : (
                 <>
-                  <div className={viewMode === "grid" ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" : "space-y-4"}>
+                  <div className={viewMode === "grid" ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6" : "space-y-4"}>
                     {products.map((product) => (
                       <Link key={product.id} to={`/products/parts/${product.id}`}>
                         <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 group h-full border">
