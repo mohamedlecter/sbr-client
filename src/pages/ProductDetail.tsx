@@ -148,6 +148,8 @@ const ProductDetail = () => {
     );
   }
   const productImages = parseImages(product.images);
+  console.log('ProductDetail - product.images:', product.images);
+  console.log('ProductDetail - parsed productImages:', productImages);
   const stockQuantity = parseInt(product.quantity || '0');
   const sellingPrice = parseFloat(product.selling_price || '0');
   const isInStock = stockQuantity > 0;
@@ -194,6 +196,17 @@ const ProductDetail = () => {
                     src={getImageUrl(productImages[selectedImage])}
                     alt={product.name}
                     className="w-full h-full object-cover"
+                    onError={(e) => {
+                      console.error('Image failed to load:', {
+                        src: e.currentTarget.src,
+                        imagePath: productImages[selectedImage],
+                        allImages: productImages
+                      });
+                      e.currentTarget.src = '/placeholder.svg';
+                    }}
+                    onLoad={() => {
+                      console.log('Image loaded successfully:', getImageUrl(productImages[selectedImage]));
+                    }}
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-muted-foreground">
