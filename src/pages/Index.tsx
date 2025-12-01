@@ -151,6 +151,66 @@ const Index = () => {
           </div>
         </section>
 
+                {/* Featured Products */}
+                <section className="py-8 sm:py-12 lg:py-16 bg-background">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-8 sm:mb-12">
+              <h2 className="text-2xl sm:text-3xl lg:text-[40px] font-bold">Featured Products</h2>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-3 lg:gap-4">
+              {isLoadingProducts ? (
+                <div className="col-span-full text-center py-8 text-muted-foreground">Loading featured products...</div>
+              ) : featuredProducts.length > 0 ? (
+                featuredProducts.map((product: any) => {
+                  const productImages = parseImages(product.images);
+                  const productImage = productImages.length > 0 ? productImages[0] : (product.image_url || product.image);
+                  const productPrice = parseFloat(product.selling_price || product.unit_price || product.price || '0');
+
+                  console.log("productImage", productImage);
+                  console.log("product", product);
+                  
+                  return (
+                    <div>
+
+                    <Link key={product.id} to={`/products/parts/${product.id}`}>
+                      <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 group h-full">
+                        <div className="aspect-square overflow-hidden bg-muted">
+                          <img
+                            src={getImageUrl(productImage)}
+                            alt={product.name}
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                          />
+                        </div>
+                        <CardContent className="p-2 lg:p-3">
+                          <p className="text-[10px] lg:text-xs text-muted-foreground mb-1 line-clamp-1">{product.manufacturer_name || product.manufacturer || 'Manufacturer'}</p>
+                          <h3 className="font-bold text-xs lg:text-sm  line-clamp-2">{product.name}</h3>
+                          <p className="text-sm lg:text-base mt-1 font-bold text-primary">QAR {productPrice.toLocaleString()}</p>
+                          <Button className="w-full mt-2 mb-2" size="sm" variant="outline" onClick={() => handleAddToCart(product.id, 1, product.name)}>
+                            <ShoppingCart className="h-4 w-4" />
+                            {isAddingToCart ? 'Adding...' : 'Add to Cart'}
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    </Link>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="col-span-full text-center py-8 text-muted-foreground">
+                  No featured products available
+                </div>
+              )}
+            </div>
+            <div className="text-center mt-8">
+              <Button variant="outline" size="lg" asChild>
+                <Link to="/categories">
+                  View All Products <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </section>
+
         {/* Shop by Bike Model - Carousel */}
         <section className="py-8 bg-background">
           <div className="container mx-auto px-4">
@@ -275,65 +335,7 @@ const Index = () => {
           </div>
         </section>
 
-        {/* Featured Products */}
-        <section className="py-8 sm:py-12 lg:py-16 bg-background">
-          <div className="container mx-auto px-4">
-            <div className="text-center mb-8 sm:mb-12">
-              <h2 className="text-2xl sm:text-3xl lg:text-[40px] font-bold">Featured Products</h2>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-3 lg:gap-4">
-              {isLoadingProducts ? (
-                <div className="col-span-full text-center py-8 text-muted-foreground">Loading featured products...</div>
-              ) : featuredProducts.length > 0 ? (
-                featuredProducts.map((product: any) => {
-                  const productImages = parseImages(product.images);
-                  const productImage = productImages.length > 0 ? productImages[0] : (product.image_url || product.image);
-                  const productPrice = parseFloat(product.selling_price || product.unit_price || product.price || '0');
 
-                  console.log("productImage", productImage);
-                  console.log("product", product);
-                  
-                  return (
-                    <div>
-
-                    <Link key={product.id} to={`/products/parts/${product.id}`}>
-                      <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 group h-full">
-                        <div className="aspect-square overflow-hidden bg-muted">
-                          <img
-                            src={getImageUrl(productImage)}
-                            alt={product.name}
-                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                          />
-                        </div>
-                        <CardContent className="p-2 lg:p-3">
-                          <p className="text-[10px] lg:text-xs text-muted-foreground mb-1 line-clamp-1">{product.manufacturer_name || product.manufacturer || 'Manufacturer'}</p>
-                          <h3 className="font-bold text-xs lg:text-sm  line-clamp-2">{product.name}</h3>
-                          <p className="text-sm lg:text-base mt-1 font-bold text-primary">QAR {productPrice.toLocaleString()}</p>
-                          <Button className="w-full mt-2 mb-2" size="sm" variant="outline" onClick={() => handleAddToCart(product.id, 1, product.name)}>
-                            <ShoppingCart className="h-4 w-4" />
-                            {isAddingToCart ? 'Adding...' : 'Add to Cart'}
-                          </Button>
-                        </CardContent>
-                      </Card>
-                    </Link>
-                    </div>
-                  );
-                })
-              ) : (
-                <div className="col-span-full text-center py-8 text-muted-foreground">
-                  No featured products available
-                </div>
-              )}
-            </div>
-            <div className="text-center mt-8">
-              <Button variant="outline" size="lg" asChild>
-                <Link to="/categories">
-                  View All Products <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
-              </Button>
-            </div>
-          </div>
-        </section>
 
 
         {/* Trusted Partners */}
