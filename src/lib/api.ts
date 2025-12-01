@@ -12,20 +12,53 @@ interface ApiResponse<T> {
 export function parseImages(images: any): string[] {
     if (!images) return [];
     
-    // If it's already an array, return it
+    // If it's already an array, clean and return it
     if (Array.isArray(images)) {
-        return images;
+        return images
+            .map(img => {
+                if (typeof img === 'string') {
+                    // Remove any surrounding quotes or brackets
+                    return img.trim().replace(/^["'\[\]]+|["'\[\]]+$/g, '');
+                }
+                return img;
+            })
+            .filter(img => img && img.length > 0);
     }
     
     // If it's a string, try to parse it as JSON
     if (typeof images === 'string') {
-        try {
-            const parsed = JSON.parse(images);
-            return Array.isArray(parsed) ? parsed : [];
-        } catch (e) {
-            // If parsing fails, treat it as a single image path
-            return [images];
+        const trimmed = images.trim();
+        
+        // If it looks like a JSON array string, try to parse it
+        if (trimmed.startsWith('[') || trimmed.startsWith('"')) {
+            try {
+                const parsed = JSON.parse(trimmed);
+                if (Array.isArray(parsed)) {
+                    return parsed
+                        .map(img => {
+                            if (typeof img === 'string') {
+                                // Clean up any extra quotes or brackets
+                                return img.trim().replace(/^["'\[\]]+|["'\[\]]+$/g, '');
+                            }
+                            return img;
+                        })
+                        .filter(img => img && img.length > 0);
+                }
+                // If parsed is a string, clean it and return as array
+                if (typeof parsed === 'string') {
+                    const cleaned = parsed.trim().replace(/^["'\[\]]+|["'\[\]]+$/g, '');
+                    return cleaned ? [cleaned] : [];
+                }
+            } catch (e) {
+                // If parsing fails, try to extract path from the string
+                // Remove brackets and quotes
+                const cleaned = trimmed.replace(/^["'\[\]]+|["'\[\]]+$/g, '').trim();
+                return cleaned ? [cleaned] : [];
+            }
         }
+        
+        // If it's a plain string path, return it as array
+        return [trimmed];
     }
     
     return [];
@@ -34,27 +67,35 @@ export function parseImages(images: any): string[] {
 // Helper function to convert relative image paths to full URLs
 export function getImageUrl(imagePath: string | null | undefined): string {
     if (!imagePath) return '/placeholder.svg';
+    
+    // Clean the path - remove any invalid characters
+    const cleaned = imagePath.trim();
+    
+    // If the cleaned path is too short or contains only brackets/quotes, return placeholder
+    if (cleaned.length < 2 || /^[\[\]{}"'`]+$/.test(cleaned)) {
+        return '/placeholder.svg';
+    }
 
     // If it's already a full URL, return as is
-    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
-        return imagePath;
+    if (cleaned.startsWith('http://') || cleaned.startsWith('https://')) {
+        return cleaned;
     }
 
     // Get the API base URL from environment variable
     const apiUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
     
     // If it starts with /uploads, prepend the API URL
-    if (imagePath.startsWith('/uploads')) {
-        return `${apiUrl}${imagePath}`;
+    if (cleaned.startsWith('/uploads')) {
+        return `${apiUrl}${cleaned}`;
     }
 
     // If it starts with /, prepend the API URL
-    if (imagePath.startsWith('/')) {
-        return `${apiUrl}${imagePath}`;
+    if (cleaned.startsWith('/')) {
+        return `${apiUrl}${cleaned}`;
     }
 
     // Otherwise, assume it's a relative path and prepend /uploads/
-    return `${apiUrl}/uploads/${imagePath}`;
+    return `${apiUrl}/uploads/${cleaned}`;
 }
 // Helper function to build query strings
 function buildQueryString(params: Record<string, any>): string {
