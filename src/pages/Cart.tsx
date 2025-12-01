@@ -9,7 +9,7 @@ import { Trash2, Plus, Minus, ShoppingBag, ArrowRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { fetchCart, updateCartItem, removeFromCart, clearCart } from "@/store/slices/cartSlice";
-import { getImageUrl } from "@/lib/api";
+import { getImageUrl, parseImages } from "@/lib/api";
 
 const Cart = () => {
   const { toast } = useToast();
@@ -138,7 +138,8 @@ useEffect(() => {
                 <div className="text-center py-8 text-muted-foreground">Loading cart...</div>
               ) : (
                 safeCartItems.map((item: any) => {
-                  const itemImage = item.images && item.images.length > 0 ? item.images[0] : (item.image || null);
+                  const itemImages = parseImages(item.images);
+                  const itemImage = itemImages.length > 0 ? itemImages[0] : (item.image || null);
                   const itemPrice = parseFloat(item.unit_price || item.price || '0');
                   const itemTotal = itemPrice * (item.quantity || 0);
                   

@@ -29,7 +29,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { ArrowLeft, Filter, Trash2, ChevronUp, Grid3x3, List, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
-import { productsApi, getImageUrl } from "@/lib/api";
+import { productsApi, getImageUrl, parseImages } from "@/lib/api";
 import { Wrench, Bike, Sparkles, Zap, Shield, Wind, Package } from "lucide-react";
 
 const Category = () => {
@@ -526,11 +526,17 @@ const Category = () => {
                       <Link key={product.id} to={`/products/parts/${product.id}`}>
                         <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 group h-full border">
                           <div className="aspect-square overflow-hidden bg-muted relative">
-                            <img
-                              src={getImageUrl(product.image_url || product.image)}
-                              alt={product.name || ""}
-                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                            />
+                            {(() => {
+                              const productImages = parseImages(product.images);
+                              const productImage = productImages.length > 0 ? productImages[0] : (product.image_url || product.image);
+                              return (
+                                <img
+                                  src={getImageUrl(productImage)}
+                                  alt={product.name || ""}
+                                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                                />
+                              );
+                            })()}
                             {product.in_stock === false && (
                               <div className="absolute inset-0 bg-foreground/80 flex items-center justify-center">
                                 <span className="text-background font-bold text-sm">Out of Stock</span>

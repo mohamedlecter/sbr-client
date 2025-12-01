@@ -30,7 +30,7 @@ import { Filter, Trash2, ChevronUp, Grid3x3, List, Search, ChevronLeft, ChevronR
 import { useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { fetchCategories, fetchProducts } from "@/store/slices/productsSlice";
-import { productsApi, getImageUrl } from "@/lib/api";
+import { productsApi, getImageUrl, parseImages } from "@/lib/api";
 
 const CategoriesPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -439,7 +439,8 @@ const CategoriesPage = () => {
                 <>
                   <div className={viewMode === "grid" ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6" : "space-y-4"}>
                     {parts.map((part: any) => {
-                      const imageUrl = part.images && part.images.length > 0 ? part.images[0] : null;
+                      const partImages = parseImages(part.images);
+                      const imageUrl = partImages.length > 0 ? partImages[0] : null;
                       const isInStock = (part.quantity || 0) > 0;
                       const sellingPrice = part.selling_price ? parseFloat(part.selling_price) : 0;
                       

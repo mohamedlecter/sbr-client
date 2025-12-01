@@ -7,7 +7,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { ShoppingCart, Check, ArrowRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { productsApi, cartApi, getImageUrl } from "@/lib/api";
+import { productsApi, cartApi, getImageUrl, parseImages } from "@/lib/api";
 
 const BikeModelDetails = () => {
   const { id } = useParams();
@@ -315,7 +315,8 @@ const BikeModelDetails = () => {
               <>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 lg:gap-4">
                   {compatibleParts.map((part: any) => {
-                    const partImage = part.images && part.images.length > 0 ? part.images[0] : (part.image_url || part.image);
+                    const partImages = parseImages(part.images);
+                    const partImage = partImages.length > 0 ? partImages[0] : (part.image_url || part.image);
                     const partPrice = parseFloat(part.selling_price || part.unit_price || part.price || '0');
                     const isInStock = (parseInt(part.quantity || '0')) > 0;
                     const isAdding = isAddingToCart[part.id] || false;

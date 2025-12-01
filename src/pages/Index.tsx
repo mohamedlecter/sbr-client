@@ -17,8 +17,7 @@ import TrustBadges from "@/components/TrustBadges";
 import heroImage from "@/assets/hero-motorcycle.jpg";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { fetchManufacturers, fetchModels } from "@/store/slices/productsSlice";
-import { cartApi, productsApi } from "@/lib/api";
-import { getImageUrl } from "@/lib/api";
+import { cartApi, productsApi, parseImages, getImageUrl } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
@@ -287,7 +286,8 @@ const Index = () => {
                 <div className="col-span-full text-center py-8 text-muted-foreground">Loading featured products...</div>
               ) : featuredProducts.length > 0 ? (
                 featuredProducts.map((product: any) => {
-                  const productImage = product.images && product.images.length > 0 ? product.images[0] : (product.image_url || product.image);
+                  const productImages = parseImages(product.images);
+                  const productImage = productImages.length > 0 ? productImages[0] : (product.image_url || product.image);
                   const productPrice = parseFloat(product.selling_price || product.unit_price || product.price || '0');
 
                   console.log("productImage", productImage);

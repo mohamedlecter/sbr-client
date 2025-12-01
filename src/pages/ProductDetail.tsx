@@ -7,7 +7,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { ShoppingCart, Heart, Share2, Check, Minus, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { productsApi, cartApi, getImageUrl } from "@/lib/api";
+import { productsApi, cartApi, getImageUrl, parseImages } from "@/lib/api";
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -147,7 +147,7 @@ const ProductDetail = () => {
       </div>
     );
   }
-  const productImages = Array.isArray(product.images) ? product.images : [];
+  const productImages = parseImages(product.images);
   const stockQuantity = parseInt(product.quantity || '0');
   const sellingPrice = parseFloat(product.selling_price || '0');
   const isInStock = stockQuantity > 0;
@@ -193,7 +193,7 @@ const ProductDetail = () => {
                   <img
                     src={getImageUrl(productImages[selectedImage])}
                     alt={product.name}
-                    className="w-[full] h-full object-cover"
+                    className="w-full h-full object-cover"
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-muted-foreground">
@@ -348,7 +348,8 @@ const ProductDetail = () => {
               <h2 className="text-2xl lg:text-3xl font-bold mb-6 lg:mb-8">Related Products</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 lg:gap-6">
                 {relatedProducts.map((item: any) => {
-                  const itemImage = item.images && item.images.length > 0 ? item.images[0] : null;
+                  const itemImages = parseImages(item.images);
+                  const itemImage = itemImages.length > 0 ? itemImages[0] : null;
                   const itemPrice = parseFloat(item.selling_price || '0');
                   const itemIsInStock = (parseInt(item.quantity || '0')) > 0;
                   

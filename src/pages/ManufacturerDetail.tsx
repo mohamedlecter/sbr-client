@@ -28,7 +28,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { ArrowLeft, Filter, Trash2, ChevronUp, Grid3x3, List, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
-import { productsApi, getImageUrl } from "@/lib/api";
+import { productsApi, getImageUrl, parseImages } from "@/lib/api";
 
 const ManufacturerDetail = () => {
   const { id } = useParams();
@@ -509,8 +509,9 @@ const ManufacturerDetail = () => {
               ) : (
                 <>
                   <div className={viewMode === "grid" ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6" : "space-y-4"}>
-                    {products.map((product: any) => {
-                      const productImage = product.images && product.images.length > 0 ? product.images[0] : (product.image_url || product.image);
+                     {products.map((product: any) => {
+                       const productImages = parseImages(product.images);
+                       const productImage = productImages.length > 0 ? productImages[0] : (product.image_url || product.image);
                       const productPrice = parseFloat(product.selling_price || product.unit_price || product.price || '0');
                       const isInStock = (parseInt(product.quantity || '0')) > 0;
                       

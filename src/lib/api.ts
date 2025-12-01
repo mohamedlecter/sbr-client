@@ -8,6 +8,29 @@ interface ApiResponse<T> {
     message?: string;
 }
 
+// Helper function to parse images field (can be string, array, or null)
+export function parseImages(images: any): string[] {
+    if (!images) return [];
+    
+    // If it's already an array, return it
+    if (Array.isArray(images)) {
+        return images;
+    }
+    
+    // If it's a string, try to parse it as JSON
+    if (typeof images === 'string') {
+        try {
+            const parsed = JSON.parse(images);
+            return Array.isArray(parsed) ? parsed : [];
+        } catch (e) {
+            // If parsing fails, treat it as a single image path
+            return [images];
+        }
+    }
+    
+    return [];
+}
+
 // Helper function to convert relative image paths to full URLs
 export function getImageUrl(imagePath: string | null | undefined): string {
     if (!imagePath) return '/placeholder.svg';
