@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -7,81 +7,154 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { ShoppingCart, Heart, Share2, Check, Minus, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { productsApi, cartApi, getImageUrl } from "@/lib/api";
 
 const ProductDetail = () => {
   const { id } = useParams();
   const { toast } = useToast();
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
+  const [product, setProduct] = useState<any>(null);
+  const [relatedProducts, setRelatedProducts] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
 
-  // Mock product data - in real app, fetch based on id
-  const product = {
-    id: id || "1",
-    name: "Akrapovič Racing Titanium Exhaust System",
-    manufacturer: "Akrapovič",
-    manufacturerLogo: "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=200",
-    originalPrice: 1599,
-    sellingPrice: 1299,
-    description:
-      "The Racing Line represents a full step in the exhaust system tuning process and offers a great balance between price and performance. The systems are significantly lighter compared to the stock exhaust system and feature exceptional production quality, hi-tech materials, and increased engine performance combined with pure racing sound output.",
-    images: [
-      "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800",
-      "https://images.unsplash.com/photo-1558980664-769d59546b3d?w=800",
-      "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?w=800",
-      "https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=800",
-    ],
-    stockQuantity: 15,
-    weight: "2.8 kg",
-    color: "Titanium",
-    compatibility: ["Yamaha YZF-R1 2020-2024", "Yamaha YZF-R1M 2020-2024"],
-    specifications: {
-      Material: "Titanium",
-      "Weight Reduction": "4.2 kg vs stock",
-      "Power Increase": "+3.5 HP",
-      "Sound Level": "105 dB",
-      Finish: "Brushed Titanium",
-    },
+  // Scroll to top when component mounts
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, []);
+
+  // Fetch product details
+  useEffect(() => {
+    const fetchProduct = async () => {
+      if (!id) return;
+      
+      setIsLoading(true);
+      try {
+        const response = await productsApi.getPartDetails(id);
+        if (response.data) {
+          const data = response.data as any;
+          
+          // Extract part from response
+          if (data.part) {
+            setProduct(data.part);
+            
+            // Use related_parts from response if available
+            if (data.related_parts && Array.isArray(data.related_parts)) {
+              // Filter out the current product
+              const filtered = data.related_parts.filter((p: any) => p.id !== id);
+              setRelatedProducts(filtered.slice(0, 3));
+            } else {
+              // Fallback: fetch related products from the same category if not provided
+              if (data.part.category_id) {
+                const relatedResponse = await productsApi.searchParts({
+                  category_id: data.part.category_id,
+                  limit: 4,
+                  page: 1
+                });
+                if (relatedResponse.data) {
+                  const related = (relatedResponse.data as any).parts || [];
+                  // Filter out the current product
+                  const filtered = related.filter((p: any) => p.id !== id);
+                  setRelatedProducts(filtered.slice(0, 3));
+                }
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching product:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load product details",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProduct();
+  }, [id, toast]);
+
+  const handleAddToCart = async () => {
+    if (!product || !id) return;
+
+    setIsAddingToCart(true);
+    try {
+      const response = await cartApi.addToCart('part', id, quantity);
+      if (response.error) {
+        toast({
+          title: "Error",
+          description: response.error || "Failed to add to cart",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Added to cart",
+          description: `${quantity} x ${product.name}`,
+        });
+      }
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add to cart",
+        variant: "destructive",
+      });
+    } finally {
+      setIsAddingToCart(false);
+    }
   };
 
-  const relatedProducts = [
-    {
-      id: 2,
-      name: "Akrapovič Carbon Fiber Heat Shield",
-      manufacturer: "Akrapovič",
-      price: 249,
-      image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400",
-    },
-    {
-      id: 3,
-      name: "Akrapovič Optional Header",
-      manufacturer: "Akrapovič",
-      price: 899,
-      image: "https://images.unsplash.com/photo-1558980664-769d59546b3d?w=400",
-    },
-    {
-      id: 4,
-      name: "Akrapovič Sound Kit",
-      manufacturer: "Akrapovič",
-      price: 179,
-      image: "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?w=400",
-    },
-  ];
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main className="flex-1 py-8">
+          <div className="container mx-auto px-4">
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">Loading product...</p>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
-  const handleAddToCart = () => {
-    toast({
-      title: "Added to cart",
-      description: `${quantity} x ${product.name}`,
-    });
-  };
+  if (!product) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main className="flex-1 py-8">
+          <div className="container mx-auto px-4">
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">Product not found</p>
+              <Link to="/categories" className="text-primary hover:underline mt-4 inline-block">
+                Browse all products
+              </Link>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  const productImages = product.images && product.images.length > 0 ? product.images : [];
+  const stockQuantity = parseInt(product.quantity || '0');
+  const sellingPrice = parseFloat(product.selling_price || '0');
+  const isInStock = stockQuantity > 0;
 
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
 
-      <main className="flex-1 py-8">
-        <div className="container mx-auto px-4">
+      <main className="flex-1 py-6 lg:py-8">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
           {/* Breadcrumb */}
-          <nav className="mb-6 text-sm text-muted-foreground">
+          <nav className="mb-4 lg:mb-6 text-sm text-muted-foreground">
             <Link to="/" className="hover:text-primary">
               Home
             </Link>
@@ -89,53 +162,67 @@ const ProductDetail = () => {
             <Link to="/categories" className="hover:text-primary">
               Categories
             </Link>
-            <span className="mx-2">/</span>
-            <Link to="/categories/1" className="hover:text-primary">
-              Exhaust Systems
-            </Link>
+            {product.category_id && (
+              <>
+                <span className="mx-2">/</span>
+                <Link to={`/categories/${product.category_id}`} className="hover:text-primary">
+                  {product.category_name || 'Category'}
+                </Link>
+              </>
+            )}
             <span className="mx-2">/</span>
             <span className="text-foreground">{product.name}</span>
           </nav>
 
           {/* Product Info */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-16">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 xl:gap-12 mb-12 lg:mb-16">
             {/* Image Gallery */}
-            <div className="space-y-4">
-              <div className="aspect-square rounded-lg overflow-hidden bg-muted">
-                <img
-                  src={product.images[selectedImage]}
-                  alt={product.name}
-                  className="w-full h-full object-cover"
-                />
+            <div className="space-y-3 lg:space-y-4">
+              <div className="aspect-square rounded-lg overflow-hidden bg-muted max-w-full mx-auto lg:mx-0">
+                {productImages.length > 0 ? (
+                  <img
+                    src={getImageUrl(productImages[selectedImage])}
+                    alt={product.name}
+                    className="w-[full] h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                    No image available
+                  </div>
+                )}
               </div>
-              <div className="grid grid-cols-4 gap-2">
-                {product.images.map((image, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setSelectedImage(index)}
-                    className={`aspect-square rounded-lg overflow-hidden border-2 transition-colors ${
-                      selectedImage === index ? "border-primary" : "border-transparent"
-                    }`}
-                  >
-                    <img src={image} alt={`${product.name} ${index + 1}`} className="w-full h-full object-cover" />
-                  </button>
-                ))}
-              </div>
+              {productImages.length > 1 && (
+                <div className="grid grid-cols-4 gap-2 lg:gap-3">
+                  {productImages.map((image: string, index: number) => (
+                    <button
+                      key={index}
+                      onClick={() => setSelectedImage(index)}
+                      className={`aspect-square rounded-lg overflow-hidden border-2 transition-colors ${
+                        selectedImage === index ? "border-primary" : "border-transparent hover:border-muted-foreground/50"
+                      }`}
+                    >
+                      <img src={getImageUrl(image)} alt={`${product.name} ${index + 1}`} className="w-full h-full object-cover" />
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Product Details */}
-            <div className="space-y-6">
+            <div className="space-y-2 lg:space-y-2">
               <div>
-                <div className="flex items-center gap-3 mb-3">
-                  <img src={product.manufacturerLogo} alt={product.manufacturer} className="h-8 w-auto" />
-                  <span className="text-sm text-muted-foreground">{product.manufacturer}</span>
+                <div className="flex items-center gap-3">
+                  {product.manufacturer_logo && (
+                    <img src={getImageUrl(product.manufacturer_logo)} alt={product.manufacturer_name} className="h-8 w-auto" />
+                  )}
+                  <span className="text-sm text-muted-foreground">{product.manufacturer_name || ''}</span>
                 </div>
-                <h1 className="text-3xl md:text-4xl font-bold mb-4">{product.name}</h1>
-                <div className="flex items-center gap-4 mb-4">
-                  {product.stockQuantity > 0 ? (
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4">{product.name}</h1>
+                <div className="flex items-center gap-4 ">
+                  {isInStock ? (
                     <Badge className="bg-green-500">
                       <Check className="h-3 w-3 mr-1" />
-                      In Stock ({product.stockQuantity} available)
+                      In Stock ({stockQuantity} available)
                     </Badge>
                   ) : (
                     <Badge variant="destructive">Out of Stock</Badge>
@@ -143,43 +230,66 @@ const ProductDetail = () => {
                 </div>
               </div>
 
-              <div className="flex items-baseline gap-3">
-                {product.originalPrice > product.sellingPrice && (
-                  <span className="text-2xl text-muted-foreground line-through">${product.originalPrice}</span>
-                )}
-                <span className="text-4xl font-bold text-primary">${product.sellingPrice}</span>
+              <div className="flex items-baseline">
+                <span className="text-3xl font-bold text-primary">
+                  QAR {sellingPrice.toLocaleString()}
+                </span>
+              </div>
+              <div className="mb-6">
+              {product.description && (
+                <p className="text-muted-foreground leading-relaxed">{product.description}</p>
+              )}
               </div>
 
-              <p className="text-muted-foreground leading-relaxed">{product.description}</p>
 
               {/* Specifications */}
               <div>
-                <h3 className="font-bold text-lg mb-3">Specifications</h3>
-                <div className="grid grid-cols-2 gap-3">
-                  {Object.entries(product.specifications).map(([key, value]) => (
-                    <div key={key} className="bg-muted/50 p-3 rounded-lg">
-                      <p className="text-xs text-muted-foreground mb-1">{key}</p>
-                      <p className="font-medium">{value}</p>
+                <h3 className="font-bold text-lg">Specifications</h3>
+                <div className="grid grid-cols-2 gap-3 lg:gap-4">
+                  {product.weight && (
+                    <div className="bg-muted/50 p-3 lg:p-4 rounded-lg">
+                      <p className="text-xs text-muted-foreground mb-1">Weight</p>
+                      <p className="font-medium">{product.weight} kg</p>
                     </div>
-                  ))}
+                  )}
+                  {product.color_options && (
+                    <div className="bg-muted/50 p-3 lg:p-4 rounded-lg">
+                      <p className="text-xs text-muted-foreground mb-1">Color</p>
+                      <p className="font-medium">{product.color_options}</p>
+                    </div>
+                  )}
+                  {product.sku && (
+                    <div className="bg-muted/50 p-3 lg:p-4 rounded-lg">
+                      <p className="text-xs text-muted-foreground mb-1">SKU</p>
+                      <p className="font-medium">{product.sku}</p>
+                    </div>
+                  )}
+                  {product.dimensions && (
+                    <div className="bg-muted/50 p-3 lg:p-4 rounded-lg">
+                      <p className="text-xs text-muted-foreground mb-1">Dimensions</p>
+                      <p className="font-medium">{product.dimensions}</p>
+                    </div>
+                  )}
                 </div>
               </div>
 
               {/* Compatibility */}
-              <div>
-                <h3 className="font-bold text-lg mb-3">Compatible Models</h3>
-                <div className="space-y-2">
-                  {product.compatibility.map((model, index) => (
-                    <div key={index} className="flex items-center gap-2 text-sm">
-                      <Check className="h-4 w-4 text-primary" />
-                      <span>{model}</span>
-                    </div>
-                  ))}
+              {product.compatibility && (
+                <div>
+                  <h3 className="font-bold text-lg mb-3 lg:mb-4">Compatible Models</h3>
+                  <div className="space-y-2">
+                    {product.compatibility.split(',').map((model: string, index: number) => (
+                      <div key={index} className="flex items-center gap-2 text-sm">
+                        <Check className="h-4 w-4 text-primary flex-shrink-0" />
+                        <span>{model.trim()}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Quantity & Add to Cart */}
-              <div className="space-y-4 pt-4 border-t">
+              <div className="space-y-4 lg:space-y-5 pt-4 lg:pt-6 border-t">
                 <div className="flex items-center gap-4">
                   <span className="font-medium">Quantity:</span>
                   <div className="flex items-center border rounded-lg">
@@ -195,8 +305,8 @@ const ProductDetail = () => {
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => setQuantity(Math.min(product.stockQuantity, quantity + 1))}
-                      disabled={quantity >= product.stockQuantity}
+                      onClick={() => setQuantity(Math.min(stockQuantity, quantity + 1))}
+                      disabled={quantity >= stockQuantity || !isInStock}
                     >
                       <Plus className="h-4 w-4" />
                     </Button>
@@ -208,10 +318,10 @@ const ProductDetail = () => {
                     className="flex-1"
                     size="lg"
                     onClick={handleAddToCart}
-                    disabled={product.stockQuantity === 0}
+                    disabled={!isInStock || isAddingToCart}
                   >
                     <ShoppingCart className="mr-2 h-5 w-5" />
-                    Add to Cart
+                    {isAddingToCart ? 'Adding...' : 'Add to Cart'}
                   </Button>
                   <Button variant="outline" size="lg">
                     <Heart className="h-5 w-5" />
@@ -225,29 +335,48 @@ const ProductDetail = () => {
           </div>
 
           {/* Related Products */}
-          <section>
-            <h2 className="text-2xl font-bold mb-6">Related Products</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {relatedProducts.map((item) => (
-                <Link key={item.id} to={`/products/parts/${item.id}`}>
-                  <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 group">
-                    <div className="aspect-square overflow-hidden bg-muted">
-                      <img
-                        src={item.image}
-                        alt={item.name}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                      />
-                    </div>
-                    <CardContent className="p-4">
-                      <p className="text-xs text-muted-foreground mb-1">{item.manufacturer}</p>
-                      <h3 className="font-bold mb-2 line-clamp-2">{item.name}</h3>
-                      <p className="text-xl font-bold text-primary">${item.price}</p>
-                    </CardContent>
-                  </Card>
-                </Link>
-              ))}
-            </div>
-          </section>
+          {relatedProducts.length > 0 && (
+            <section className="mt-8 lg:mt-12">
+              <h2 className="text-2xl lg:text-3xl font-bold mb-6 lg:mb-8">Related Products</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 lg:gap-6">
+                {relatedProducts.map((item: any) => {
+                  const itemImage = item.images && item.images.length > 0 ? item.images[0] : null;
+                  const itemPrice = parseFloat(item.selling_price || '0');
+                  const itemIsInStock = (parseInt(item.quantity || '0')) > 0;
+                  
+                  return (
+                    <Link key={item.id} to={`/products/parts/${item.id}`}>
+                      <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 group">
+                        <div className="aspect-square overflow-hidden bg-muted relative">
+                          {itemImage ? (
+                            <img
+                              src={getImageUrl(itemImage)}
+                              alt={item.name}
+                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                              No image
+                            </div>
+                          )}
+                          {!itemIsInStock && (
+                            <div className="absolute inset-0 bg-foreground/80 flex items-center justify-center">
+                              <span className="text-background font-bold text-sm">Out of Stock</span>
+                            </div>
+                          )}
+                        </div>
+                        <CardContent className="p-4">
+                          <p className="text-xs text-muted-foreground mb-1">{item.manufacturer_name || ''}</p>
+                          <h3 className="font-bold mb-2 line-clamp-2">{item.name}</h3>
+                          <p className="text-xl font-bold text-primary">QAR {itemPrice.toLocaleString()}</p>
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  );
+                })}
+              </div>
+            </section>
+          )}
         </div>
       </main>
 

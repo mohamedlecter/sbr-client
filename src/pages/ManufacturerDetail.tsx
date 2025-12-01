@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -26,78 +26,120 @@ import {
 } from "@/components/ui/drawer";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { Filter, Trash2, ChevronUp, Grid3x3, List, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, Filter, Trash2, ChevronUp, Grid3x3, List, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { fetchCategories, fetchProducts } from "@/store/slices/productsSlice";
 import { productsApi, getImageUrl } from "@/lib/api";
 
-const CategoriesPage = () => {
+const ManufacturerDetail = () => {
+  const { id } = useParams();
+  const [manufacturer, setManufacturer] = useState<any>(null);
+  const [products, setProducts] = useState<any[]>([]);
+  const [pagination, setPagination] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeSearch, setActiveSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [sortBy, setSortBy] = useState("name");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
-  const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [inStock, setInStock] = useState(true);
   const [outOfStock, setOutOfStock] = useState(true);
   const [priceRange, setPriceRange] = useState([0, 10000]);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [isLoadingProducts, setIsLoadingProducts] = useState(false);
-  const dispatch = useAppDispatch();
-  const { categories, isLoading, parts, partsPagination } = useAppSelector((state) => state.products);
-
-
+  const [isLoading, setIsLoading] = useState(false);
 
   // Scroll to top when component mounts
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, []);
 
+  // Fetch manufacturer details
   useEffect(() => {
-    dispatch(fetchCategories({
-      page: 1,
-      limit: 100,
-      sort: "name",
-      order: "asc"
-    }));
-  }, [dispatch]);
-
-  useEffect(() => {
-    const params: any = {
-      page: currentPage,
-      limit: 20,
-      sort: sortBy,
-      order: sortOrder
+    if (!id) return;
+    
+    const fetchManufacturer = async () => {
+      setIsLoading(true);
+      try {
+        const response = await productsApi.getManufacturerDetails(id);
+        if (response.data) {
+          const data = response.data as any;
+          // Handle different response structures
+          if (data.manufacturer) {
+            setManufacturer(data.manufacturer);
+            // If products are included in the response
+            if (data.parts && Array.isArray(data.parts)) {
+              setProducts(data.parts);
+              setPagination(data.pagination || null);
+            }
+          } else {
+            setManufacturer(Array.isArray(data) ? data[0] : data);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching manufacturer:', error);
+      } finally {
+        setIsLoading(false);
+      }
     };
 
-    if (selectedCategory && selectedCategory !== "all") {
-      params.category_id = selectedCategory;
-    }
+    fetchManufacturer();
+  }, [id]);
 
-    if (activeSearch) {
-      params.search = activeSearch;
-    }
+  // Fetch products
+  useEffect(() => {
+    if (!id) return;
 
-    // If both are checked, show all (don't filter by stock)
-    // If only inStock is checked, show only in stock
-    // If only outOfStock is checked, show only out of stock
-    if (inStock && !outOfStock) {
-      params.in_stock = true;
-    } else if (!inStock && outOfStock) {
-      params.in_stock = false;
-    }
-    // If both are true, don't add in_stock param (show all)
+    const fetchProducts = async () => {
+      setIsLoading(true);
+      try {
+        const params: any = {
+          page: currentPage,
+          limit: 20,
+          manufacturer_id: id,
+          sort: sortBy,
+          order: sortOrder,
+        };
 
-    if (priceRange[0] > 0) {
-      params.min_price = priceRange[0];
-    }
-    if (priceRange[1] < 10000) {
-      params.max_price = priceRange[1];
-    }
+        if (activeSearch) {
+          params.search = activeSearch;
+        }
 
-    dispatch(fetchProducts(params));
-  }, [dispatch, currentPage, selectedCategory, sortBy, sortOrder, activeSearch, inStock, outOfStock, priceRange]);
+        // If both are checked, show all (don't filter by stock)
+        // If only inStock is checked, show only in stock
+        // If only outOfStock is checked, show only out of stock
+        if (inStock && !outOfStock) {
+          params.in_stock = true;
+        } else if (!inStock && outOfStock) {
+          params.in_stock = false;
+        }
+        // If both are true, don't add in_stock param (show all)
+
+        if (priceRange[0] > 0) {
+          params.min_price = priceRange[0];
+        }
+        if (priceRange[1] < 10000) {
+          params.max_price = priceRange[1];
+        }
+
+        const response = await productsApi.searchParts(params);
+        if (response.data) {
+          const data = response.data as any;
+          if (Array.isArray(data)) {
+            setProducts(data);
+            setPagination(null);
+          } else {
+            setProducts(data.parts || []);
+            setPagination(data.pagination || null);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching products:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, [id, currentPage, activeSearch, sortBy, sortOrder, inStock, outOfStock, priceRange]);
+
   const handleSearch = () => {
     setActiveSearch(searchQuery);
     setCurrentPage(1);
@@ -109,7 +151,6 @@ const CategoriesPage = () => {
   };
 
   const handleClearAll = () => {
-    setSelectedCategory("all");
     setInStock(true);
     setOutOfStock(true);
     setPriceRange([0, 10000]);
@@ -118,15 +159,58 @@ const CategoriesPage = () => {
     setCurrentPage(1);
   };
 
-  const inStockCount = parts.filter((p: any) => (p.quantity || 0) > 0).length;
-  const outOfStockCount = parts.filter((p: any) => (p.quantity || 0) === 0).length;
+  const inStockCount = products.filter((p) => (p.quantity || 0) > 0).length;
+  const outOfStockCount = products.filter((p) => (p.quantity || 0) === 0).length;
 
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
 
-      <main className="flex-1 py-8">
-        <div className="container mx-auto px-4">
+      <main className="flex-1 py-6 lg:py-8">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
+          {/* Breadcrumb */}
+          <nav className="mb-4 lg:mb-6 text-sm text-muted-foreground">
+            <Link to="/" className="hover:text-primary">
+              Home
+            </Link>
+            <span className="mx-2">/</span>
+            <Link to="/manufacturers" className="hover:text-primary">
+              Manufacturers
+            </Link>
+            <span className="mx-2">/</span>
+            <span className="text-foreground">{manufacturer?.name || 'Manufacturer'}</span>
+          </nav>
+
+          {/* Manufacturer Header */}
+          {manufacturer && (
+            <div className="mb-6 lg:mb-8">
+              <div className="flex items-center gap-4 mb-4">
+                <Link to="/manufacturers">
+                  <Button variant="ghost" size="icon">
+                    <ArrowLeft className="h-4 w-4" />
+                  </Button>
+                </Link>
+                {manufacturer.logo_url && (
+                  <img 
+                    src={getImageUrl(manufacturer.logo_url)} 
+                    alt={manufacturer.name} 
+                    className="h-16 w-auto"
+                  />
+                )}
+                <div>
+                  <h1 className="text-3xl lg:text-4xl font-bold">{manufacturer.name}</h1>
+                  {manufacturer.description && (
+                    <p className="text-muted-foreground mt-2">{manufacturer.description}</p>
+                  )}
+                </div>
+              </div>
+              {pagination && (
+                <p className="text-muted-foreground">
+                  {pagination.total} products found
+                </p>
+              )}
+            </div>
+          )}
 
           <div className="flex gap-6">
             {/* Left Sidebar - Filters */}
@@ -152,25 +236,29 @@ const CategoriesPage = () => {
 
                 {/* Search Filter */}
                 <div>
-                 
-                </div>
-
-                {/* Category Filter */}
-                <div>
-                  <Label className="text-sm font-bold uppercase tracking-wide mb-3 block">CATEGORY</Label>
-                  <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="All Categories" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Categories</SelectItem>
-                      {categories.map((category: any) => (
-                        <SelectItem key={category.id} value={category.id}>
-                          {category.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Label className="text-sm font-bold uppercase tracking-wide mb-3 block">SEARCH</Label>
+                  <div className="relative mb-2">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      type="search"
+                      placeholder="Search products..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          handleSearch();
+                        }
+                      }}
+                      className="pl-10 h-9"
+                    />
+                  </div>
+                  <Button
+                    size="sm"
+                    onClick={handleSearch}
+                    className="w-full mt-2"
+                  >
+                    Search
+                  </Button>
                 </div>
 
                 {/* Availability Filter */}
@@ -276,6 +364,7 @@ const CategoriesPage = () => {
 
                         {/* Search Filter */}
                         <div>
+                          <Label className="text-sm font-bold uppercase tracking-wide mb-3 block">SEARCH</Label>
                           <div className="relative mb-2">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                             <Input
@@ -298,24 +387,6 @@ const CategoriesPage = () => {
                           >
                             Search
                           </Button>
-                        </div>
-
-                        {/* Category Filter */}
-                        <div>
-                          <Label className="text-sm font-bold uppercase tracking-wide mb-3 block">CATEGORY</Label>
-                          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                            <SelectTrigger className="w-full">
-                              <SelectValue placeholder="All Categories" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="all">All Categories</SelectItem>
-                              {categories.map((category: any) => (
-                                <SelectItem key={category.id} value={category.id}>
-                                  {category.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
                         </div>
 
                         <Collapsible defaultOpen>
@@ -427,29 +498,29 @@ const CategoriesPage = () => {
               </div>
 
               {/* Products Grid */}
-              {isLoadingProducts ? (
+              {isLoading && products.length === 0 ? (
                 <div className="text-center py-12">
                   <p className="text-muted-foreground">Loading products...</p>
                 </div>
-              ) : parts.length === 0 ? (
+              ) : products.length === 0 ? (
                 <div className="text-center py-12">
                   <p className="text-muted-foreground">No products found matching your filters</p>
                 </div>
               ) : (
                 <>
                   <div className={viewMode === "grid" ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6" : "space-y-4"}>
-                    {parts.map((part: any) => {
-                      const imageUrl = part.images && part.images.length > 0 ? part.images[0] : null;
-                      const isInStock = (part.quantity || 0) > 0;
-                      const sellingPrice = part.selling_price ? parseFloat(part.selling_price) : 0;
+                    {products.map((product: any) => {
+                      const productImage = product.images && product.images.length > 0 ? product.images[0] : (product.image_url || product.image);
+                      const productPrice = parseFloat(product.selling_price || product.unit_price || product.price || '0');
+                      const isInStock = (parseInt(product.quantity || '0')) > 0;
                       
                       return (
-                        <Link key={part.id} to={`/products/parts/${part.id}`}>
+                        <Link key={product.id} to={`/products/parts/${product.id}`}>
                           <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 group h-full border">
                             <div className="aspect-square overflow-hidden bg-muted relative">
                               <img
-                                src={getImageUrl(imageUrl)}
-                                alt={part.name || ""}
+                                src={getImageUrl(productImage)}
+                                alt={product.name || ""}
                                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                               />
                               {!isInStock && (
@@ -459,11 +530,11 @@ const CategoriesPage = () => {
                               )}
                             </div>
                             <CardContent className="p-4">
-                              <p className="text-xs text-[10px] text-muted-foreground mb-1">{part.manufacturer_name || ""}</p>
-                              <p className="text-xs text-[10px] text-muted-foreground mb-1">{part.category_name || ""}</p>
-                              <h3 className="font-bold text-[26px] mb-2 line-clamp-2 text-sm">{part.name || ""}</h3>
+                              <p className="text-xs text-muted-foreground mb-1">{product.manufacturer_name || product.manufacturer || ""}</p>
+                              <p className="text-xs text-muted-foreground mb-1">{product.category_name || ""}</p>
+                              <h3 className="font-bold mb-2 line-clamp-2 text-sm">{product.name || ""}</h3>
                               <p className="text-xl font-bold text-primary">
-                                QAR {sellingPrice.toLocaleString()}
+                                QAR {productPrice.toLocaleString()}
                               </p>
                             </CardContent>
                           </Card>
@@ -473,7 +544,7 @@ const CategoriesPage = () => {
                   </div>
 
                   {/* Pagination */}
-                  {partsPagination && partsPagination.pages && partsPagination.pages > 1 && (
+                  {pagination && pagination.pages && pagination.pages > 1 && (
                     <div className="flex items-center justify-center gap-2 mt-8">
                       <Button
                         variant="outline"
@@ -483,10 +554,10 @@ const CategoriesPage = () => {
                       >
                         <ChevronLeft className="h-4 w-4" />
                       </Button>
-                      {Array.from({ length: partsPagination.pages }, (_, i) => i + 1).map((page) => {
+                      {Array.from({ length: pagination.pages }, (_, i) => i + 1).map((page) => {
                         if (
                           page === 1 ||
-                          page === partsPagination.pages ||
+                          page === pagination.pages ||
                           (page >= currentPage - 1 && page <= currentPage + 1)
                         ) {
                           return (
@@ -507,7 +578,7 @@ const CategoriesPage = () => {
                         variant="outline"
                         size="icon"
                         onClick={() => handlePageChange(currentPage + 1)}
-                        disabled={currentPage === partsPagination.pages}
+                        disabled={currentPage === pagination.pages}
                       >
                         <ChevronRight className="h-4 w-4" />
                       </Button>
@@ -525,4 +596,5 @@ const CategoriesPage = () => {
   );
 };
 
-export default CategoriesPage;
+export default ManufacturerDetail;
+

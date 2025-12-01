@@ -16,6 +16,7 @@ interface ProductState {
   merchandise: any[];
   manufacturersPagination: Pagination | null;
   modelsPagination: Pagination | null;
+  partsPagination: Pagination | null;
   isLoading: boolean;
   error: string | null;
 }
@@ -28,6 +29,7 @@ const initialState: ProductState = {
   merchandise: [],
   manufacturersPagination: null,
   modelsPagination: null,
+  partsPagination: null,
   isLoading: false,
   error: null,
 };
@@ -65,8 +67,8 @@ export const fetchModels = createAsyncThunk(
 
 export const fetchProducts = createAsyncThunk(
   'products/fetchProducts',
-  async (params: { page?: number; limit?: number; search?: string; sort?: string; order?: string; category_id?: string, manufacturer_id?: string, min_price?: number, max_price?: number, color?: string } = {}, { rejectWithValue }) => {
-    const response = await productsApi.getPartsByCategory(params.category_id || '', params);
+  async (params: { page?: number; limit?: number; search?: string; sort?: string; order?: string; category_id?: string, manufacturer_id?: string, min_price?: number, max_price?: number, color?: string, in_stock?: boolean } = {}, { rejectWithValue }) => {
+    const response = await productsApi.searchParts(params);
     if (response.error) {
       return rejectWithValue(response.error);
     }
@@ -155,7 +157,18 @@ const productsSlice = createSlice({
       .addCase(fetchProducts.fulfilled, (state, action) => {
         state.isLoading = false;
         if (action.payload) {
-          state.parts = Array.isArray(action.payload) ? action.payload : (action.payload as any).parts || [];
+          const payload = action.payload as any;
+          // Handle API response structure: { parts: [...], pagination: {...} } or direct array
+          if (Array.isArray(payload)) {
+            state.parts = payload;
+            state.partsPagination = null;
+          } else if (Array.isArray(payload.parts)) {
+            state.parts = payload.parts;
+            state.partsPagination = payload.pagination || null;
+          } else {
+            state.parts = [];
+            state.partsPagination = null;
+          }
         }
       })
       .addCase(fetchProducts.rejected, (state, action) => {

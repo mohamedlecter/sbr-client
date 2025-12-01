@@ -27,6 +27,11 @@ const BikeModels = () => {
   const { models, modelsPagination, isLoading } = useAppSelector((state) => state.products);
   const bikeModels = Array.isArray(models) ? models : ((models as any)?.models || []);
 
+  // Scroll to top when component mounts
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, []);
+
   useEffect(() => {
     dispatch(fetchModels({ 
       page: currentPage, 

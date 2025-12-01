@@ -9,12 +9,18 @@ import { Trash2, Plus, Minus, ShoppingBag, ArrowRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { fetchCart, updateCartItem, removeFromCart, clearCart } from "@/store/slices/cartSlice";
+import { getImageUrl } from "@/lib/api";
 
 const Cart = () => {
   const { toast } = useToast();
   const dispatch = useAppDispatch();
   const { items: cartItems, summary, isLoading } = useAppSelector((state) => state.cart);
   const { isAuthenticated } = useAppSelector((state) => state.auth);
+
+  // Scroll to top when component mounts
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, []);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -27,7 +33,15 @@ const Cart = () => {
   // Ensure cartItems is always an array
   const safeCartItems = Array.isArray(cartItems) ? cartItems : [];
 
-  const subtotal = summary?.subtotal || safeCartItems.reduce((sum, item) => sum + (item.price || 0) * item.quantity, 0);
+  // Calculate subtotal from items if summary not available
+  const calculateSubtotal = () => {
+    return safeCartItems.reduce((sum, item: any) => {
+      const price = parseFloat(item.selling_price || item.price || '0');
+      return sum + price * (item.quantity || 0);
+    }, 0);
+  };
+
+  const subtotal = summary?.subtotal || calculateSubtotal();
   const discountAmount = summary?.discount || subtotal * membershipDiscount;
   const total = summary?.total || subtotal - discountAmount;
   const itemCount = safeCartItems.reduce((sum, item) => sum + (item.quantity || 0), 0);
@@ -123,63 +137,69 @@ const Cart = () => {
               {isLoading ? (
                 <div className="text-center py-8 text-muted-foreground">Loading cart...</div>
               ) : (
-                safeCartItems.map((item) => (
-                  <Card key={item.id} className="hover:shadow-lg transition-shadow">
-                    <CardContent className="p-4">
-                      <div className="flex gap-4">
-                        <div className="w-24 h-24 rounded-lg overflow-hidden bg-muted shrink-0 border border-border">
-                          <img 
-                            src={item.image || '/placeholder.svg'} 
-                            alt={item.name || 'Product'} 
-                            className="w-full h-full object-cover hover:scale-110 transition-transform duration-300" 
-                          />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex justify-between items-start gap-2 mb-2">
-                            <div className="flex-1 min-w-0">
-                              <p className="text-xs text-muted-foreground mb-1">{item.manufacturer || 'Manufacturer'}</p>
-                              <h3 className="font-bold line-clamp-2">{item.name || 'Product'}</h3>
-                            </div>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => removeItem(item.id)}
-                              className="shrink-0"
-                            >
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
+                safeCartItems.map((item: any) => {
+                  const itemImage = item.images && item.images.length > 0 ? item.images[0] : (item.image || null);
+                  const itemPrice = parseFloat(item.unit_price || item.price || '0');
+                  const itemTotal = itemPrice * (item.quantity || 0);
+                  
+                  return (
+                    <Card key={item.id} className="hover:shadow-lg transition-shadow">
+                      <CardContent className="p-4">
+                        <div className="flex gap-4">
+                          <div className="w-24 h-24 rounded-lg overflow-hidden bg-muted shrink-0 border border-border">
+                            <img 
+                              src={getImageUrl(itemImage)} 
+                              alt={item.name || 'Product'} 
+                              className="w-full h-full object-cover hover:scale-110 transition-transform duration-300" 
+                            />
                           </div>
-                          <div className="flex items-center justify-between mt-4">
-                            <div className="flex items-center border rounded-lg">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex justify-between items-start gap-2 mb-2">
+                              <div className="flex-1 min-w-0">
+                                <p className="text-xs text-muted-foreground mb-1">{item.manufacturer_name || item.manufacturer || 'Manufacturer'}</p>
+                                <h3 className="font-bold line-clamp-2">{item.name || item.product_name || 'Product'}</h3>
+                              </div>
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-8 w-8"
-                                onClick={() => updateQuantity(item.id, -1)}
-                                disabled={item.quantity <= 1}
+                                onClick={() => removeItem(item.id)}
+                                className="shrink-0"
                               >
-                                <Minus className="h-3 w-3" />
-                              </Button>
-                              <span className="w-12 text-center text-sm font-medium">{item.quantity}</span>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8"
-                                onClick={() => updateQuantity(item.id, 1)}
-                              >
-                                <Plus className="h-3 w-3" />
+                                <Trash2 className="h-4 w-4 text-destructive" />
                               </Button>
                             </div>
-                            <div className="text-right">
-                              <p className="font-bold text-lg">${((item.price || 0) * item.quantity).toFixed(2)}</p>
-                              <p className="text-xs text-muted-foreground">${(item.price || 0).toFixed(2)} each</p>
+                            <div className="flex items-center justify-between mt-4">
+                              <div className="flex items-center border rounded-lg">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8"
+                                  onClick={() => updateQuantity(item.id, -1)}
+                                  disabled={item.quantity <= 1}
+                                >
+                                  <Minus className="h-3 w-3" />
+                                </Button>
+                                <span className="w-12 text-center text-sm font-medium">{item.quantity}</span>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8"
+                                  onClick={() => updateQuantity(item.id, 1)}
+                                >
+                                  <Plus className="h-3 w-3" />
+                                </Button>
+                              </div>
+                              <div className="text-right">
+                                <p className="font-bold text-lg">QAR {itemTotal.toLocaleString()}</p>
+                                <p className="text-xs text-muted-foreground">QAR {itemPrice.toLocaleString()} each</p>
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))
+                      </CardContent>
+                    </Card>
+                  );
+                })
               )}
 
               {safeCartItems.length > 0 && (
@@ -199,21 +219,27 @@ const Cart = () => {
                   <div className="space-y-2 py-4 border-y">
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Subtotal ({itemCount} items)</span>
-                      <span className="font-medium">${subtotal.toFixed(2)}</span>
+                      <span className="font-medium">QAR {subtotal.toLocaleString()}</span>
                     </div>
                     {discountAmount > 0 && (
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">
                           Discount
                         </span>
-                        <span className="font-medium text-primary">-${discountAmount.toFixed(2)}</span>
+                        <span className="font-medium text-primary">-QAR {discountAmount.toLocaleString()}</span>
+                      </div>
+                    )}
+                    {summary?.shipping_cost !== undefined && summary.shipping_cost > 0 && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Shipping</span>
+                        <span className="font-medium">QAR {summary.shipping_cost.toLocaleString()}</span>
                       </div>
                     )}
                   </div>
 
                   <div className="flex justify-between text-lg font-bold">
                     <span>Total</span>
-                    <span className="text-primary">${total.toFixed(2)}</span>
+                    <span className="text-primary">QAR {total.toLocaleString()}</span>
                   </div>
 
                   <Button asChild size="lg" className="w-full" disabled={safeCartItems.length === 0}>
@@ -228,7 +254,12 @@ const Cart = () => {
 
                   {discountAmount > 0 && (
                     <Badge className="w-full justify-center py-2">
-                      You're saving ${discountAmount.toFixed(2)}!
+                      You're saving QAR {discountAmount.toLocaleString()}!
+                    </Badge>
+                  )}
+                  {summary?.points_earned && summary.points_earned > 0 && (
+                    <Badge variant="outline" className="w-full justify-center py-2">
+                      You'll earn {summary.points_earned} points!
                     </Badge>
                   )}
                 </CardContent>

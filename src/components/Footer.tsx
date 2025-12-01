@@ -126,8 +126,8 @@ const Footer = () => {
                 <Phone className="h-4 w-4 mt-0.5 shrink-0" />
                 <div>
                   <p className="font-medium text-background">Hotline</p>
-                  <a href="tel:+1234567890" className="hover:text-primary transition-colors">
-                    +123 456 7890
+                  <a href="tel:+97450000000" className="hover:text-primary transition-colors">
+                    +974 5000 0000
                   </a>
                 </div>
               </li>
@@ -144,7 +144,7 @@ const Footer = () => {
                 <MapPin className="h-4 w-4 mt-0.5 shrink-0" />
                 <div>
                   <p className="font-medium text-background">Address</p>
-                  <p>123 Performance Street, City, Country</p>
+                  <p>Doha, Qatar</p>
                 </div>
               </li>
             </ul>

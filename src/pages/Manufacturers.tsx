@@ -42,6 +42,11 @@ const Manufacturers = () => {
   const dispatch = useAppDispatch();
   const { manufacturers, manufacturersPagination, isLoading } = useAppSelector((state) => state.products);
 
+  // Scroll to top when component mounts
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, []);
+
   useEffect(() => {
     dispatch(fetchManufacturers({ 
       page: currentPage, 

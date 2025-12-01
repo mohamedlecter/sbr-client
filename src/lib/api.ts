@@ -207,8 +207,6 @@ export const productsApi = {
         in_stock?: boolean 
         category_id?: string;
     }) => 
-        category_id && category_id !== 'all' ?
-        apiRequest(`/api/products/parts/category/${category_id}${buildQueryString(params || {})}`) :
         apiRequest(`/api/products/parts${buildQueryString(params || {})}`),
     getPartDetails: (id: string) => apiRequest(`/api/products/parts/${id}`),
     getMerchandise: (params?: { 
@@ -233,6 +231,8 @@ export const productsApi = {
         order?: string;
     }) => 
         apiRequest(`/api/products/models${buildQueryString(params || {})}`),
+    getModelDetails: (id: string, params?: { page?: number; limit?: number; sort?: string; order?: string }) => 
+        apiRequest(`/api/products/models/${id}${buildQueryString(params || {})}`),
     getModelsByMakeId: (id: string) => apiRequest(`/api/products/models/make-id/${id}`),
 }
 

@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, Bike, Wrench, Sparkles, Building2 } from "lucide-react";
+import { ArrowRight, Bike, Wrench, Sparkles, Building2, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useEffect, useState } from "react";
@@ -9,6 +9,7 @@ import {
   CarouselItem,
   CarouselNext,
   CarouselPrevious,
+  type CarouselApi,
 } from "@/components/ui/carousel";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -16,18 +17,50 @@ import TrustBadges from "@/components/TrustBadges";
 import heroImage from "@/assets/hero-motorcycle.jpg";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { fetchManufacturers, fetchModels } from "@/store/slices/productsSlice";
-import { productsApi } from "@/lib/api";
+import { cartApi, productsApi } from "@/lib/api";
 import { getImageUrl } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
   const dispatch = useAppDispatch();
   const { manufacturers, models, isLoading } = useAppSelector((state) => state.products);
   const [featuredProducts, setFeaturedProducts] = useState<any[]>([]);
   const [isLoadingProducts, setIsLoadingProducts] = useState(false);
+  const [bikeModelsApi, setBikeModelsApi] = useState<CarouselApi | undefined>(undefined);
+  const [manufacturersApi, setManufacturersApi] = useState<CarouselApi | undefined>(undefined);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
 
+  const handleAddToCart = async (id: string, quantity: number, name: string) => {
+    const { toast } = useToast();
+    setIsAddingToCart(true);
+    try {
+      const response = await cartApi.addToCart('part', id, quantity);
+      if (response.error) {
+        toast({
+          title: "Error",
+          description: response.error || "Failed to add to cart",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Added to cart",
+          description: `${quantity} x ${name} added to cart`,
+        });
+      }
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add to cart",
+        variant: "destructive",
+      });
+    } finally {
+      setIsAddingToCart(false);
+    }
+  };
   useEffect(() => {
-    dispatch(fetchManufacturers());
-    dispatch(fetchModels());
+    dispatch(fetchManufacturers({}));
+    dispatch(fetchModels({}));
   }, [dispatch]);
 
   useEffect(() => {
@@ -35,7 +68,7 @@ const Index = () => {
     const fetchFeaturedProducts = async () => {
       setIsLoadingProducts(true);
       try {
-        const response = await productsApi.getPartsByCategory("all");
+        const response = await productsApi.searchParts({ limit: 12 });
         if (response.data) {
           const data = response.data as any;
           const products = Array.isArray(data) ? data : (data.parts || []);
@@ -49,6 +82,35 @@ const Index = () => {
     };
     fetchFeaturedProducts();
   }, []);
+
+  // Auto-scroll carousels
+  useEffect(() => {
+    if (!bikeModelsApi) return;
+
+    const interval = setInterval(() => {
+      if (bikeModelsApi.canScrollNext()) {
+        bikeModelsApi.scrollNext();
+      } else {
+        bikeModelsApi.scrollTo(0);
+      }
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [bikeModelsApi]);
+
+  useEffect(() => {
+    if (!manufacturersApi) return;
+
+    const interval = setInterval(() => {
+      if (manufacturersApi.canScrollNext()) {
+        manufacturersApi.scrollNext();
+      } else {
+        manufacturersApi.scrollTo(0);
+      }
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [manufacturersApi]);
 
 
   const bikeModels = Array.isArray(models) ? models : ((models as any)?.models || []);
@@ -102,6 +164,7 @@ const Index = () => {
                   align: "start",
                   loop: true,
                 }}
+                setApi={setBikeModelsApi}
                 className="w-full"
               >
                 <CarouselContent className="-ml-2 md:-ml-4">
@@ -161,6 +224,7 @@ const Index = () => {
                   align: "start",
                   loop: true,
                 }}
+                setApi={setManufacturersApi}
                 className="w-full"
               >
                 <CarouselContent className="-ml-2 md:-ml-4">
@@ -218,36 +282,52 @@ const Index = () => {
             <div className="text-center mb-12">
               <h2 className="text-[40px] font-bold">Featured Products</h2>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 lg:gap-4">
               {isLoadingProducts ? (
-                <div className="col-span-4 text-center py-8 text-muted-foreground">Loading featured products...</div>
+                <div className="col-span-full text-center py-8 text-muted-foreground">Loading featured products...</div>
               ) : featuredProducts.length > 0 ? (
-                featuredProducts.map((product: any) => (
-                  <Link key={product.id} to={`/products/parts/${product.id}`}>
-                    <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 group">
-                      <div className="aspect-square overflow-hidden bg-muted">
-                        <img
-                          src={getImageUrl(product.image_url || product.image)}
-                          alt={product.name}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                        />
-                      </div>
-                      <CardContent className="p-4">
-                        <p className="text-xs text-muted-foreground mb-1">{product.manufacturer_name || product.manufacturer || 'Manufacturer'}</p>
-                        <h3 className="font-bold mb-2 line-clamp-2">{product.name}</h3>
-                        <p className="text-xl font-bold text-primary">${(product.price || product.unit_price || 0).toFixed(2)}</p>
-                        <Button className="w-full mt-3" size="sm">
-                          Add to Cart
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  </Link>
-                ))
+                featuredProducts.map((product: any) => {
+                  const productImage = product.images && product.images.length > 0 ? product.images[0] : (product.image_url || product.image);
+                  const productPrice = parseFloat(product.selling_price || product.unit_price || product.price || '0');
+                  
+                  return (
+                    <div>
+
+                    <Link key={product.id} to={`/products/parts/${product.id}`}>
+                      <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 group h-full">
+                        <div className="aspect-square overflow-hidden bg-muted">
+                          <img
+                            src={getImageUrl(productImage)}
+                            alt={product.name}
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                          />
+                        </div>
+                        <CardContent className="p-2 lg:p-3">
+                          <p className="text-[10px] lg:text-xs text-muted-foreground mb-1 line-clamp-1">{product.manufacturer_name || product.manufacturer || 'Manufacturer'}</p>
+                          <h3 className="font-bold text-xs lg:text-sm  line-clamp-2">{product.name}</h3>
+                          <p className="text-sm lg:text-base mt-1 font-bold text-primary">QAR {productPrice.toLocaleString()}</p>
+                          <Button className="w-full mt-2 mb-2" size="sm" variant="outline" onClick={() => handleAddToCart(product.id, 1, product.name)}>
+                            <ShoppingCart className="h-4 w-4" />
+                            {isAddingToCart ? 'Adding...' : 'Add to Cart'}
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    </Link>
+                    </div>
+                  );
+                })
               ) : (
-                <div className="col-span-4 text-center py-8 text-muted-foreground">
+                <div className="col-span-full text-center py-8 text-muted-foreground">
                   No featured products available
                 </div>
               )}
+            </div>
+            <div className="text-center mt-8">
+              <Button variant="outline" size="lg" asChild>
+                <Link to="/categories">
+                  View All Products <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
             </div>
           </div>
         </section>

@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import Categories from "./pages/Categories";
 import Category from "./pages/Category";
 import Manufacturers from "./pages/Manufacturers";
+import ManufacturerDetail from "./pages/ManufacturerDetail";
 import BikeModels from "./pages/BikeModels";
 import BikeModelDetails from "./pages/BikeModelDetails";
 import ProductDetail from "./pages/ProductDetail";
@@ -45,7 +46,7 @@ const App = () => (
             <Route path="/categories" element={<Categories />} />
             <Route path="/categories/:id" element={<Category />} />
             <Route path="/manufacturers" element={<Manufacturers />} />
-            {/* <Route path="/manufacturers/:id" element={< />} /> */}
+            <Route path="/manufacturers/:id" element={<ManufacturerDetail />} />
             <Route path="/bike-models" element={<BikeModels />} />
             <Route path="/bike-models/:id" element={<BikeModelDetails />} />
             <Route path="/products/parts/:id" element={<ProductDetail />} />
