@@ -234,8 +234,8 @@ const BikeModelDetails = () => {
             <div className="space-y-5 lg:space-y-6">
               <div>
                 <div className="flex items-center gap-3 mb-3">
-                  {model.manufacturer_logo && (
-                    <img src={getImageUrl(model.manufacturer_logo)} alt={model.manufacturer_name} className="h-8 w-auto" />
+                  {model?.manufacturer_logo && (
+                    <img src={getImageUrl(model?.manufacturer_logo || '')} alt={model.manufacturer_name} className="h-8 w-auto" />
                   )}
                   <span className="text-sm text-muted-foreground">{model.manufacturer_name || ''}</span>
                 </div>

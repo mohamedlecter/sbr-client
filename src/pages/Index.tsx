@@ -289,6 +289,9 @@ const Index = () => {
                 featuredProducts.map((product: any) => {
                   const productImage = product.images && product.images.length > 0 ? product.images[0] : (product.image_url || product.image);
                   const productPrice = parseFloat(product.selling_price || product.unit_price || product.price || '0');
+
+                  console.log("productImage", productImage);
+                  console.log("product", product);
                   
                   return (
                     <div>

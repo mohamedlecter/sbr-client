@@ -16,7 +16,7 @@ import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { fetchModels } from "@/store/slices/productsSlice";
-
+import { getImageUrl } from "@/lib/api";
 const BikeModels = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeSearch, setActiveSearch] = useState(""); // The actual search term used in API calls
@@ -52,7 +52,8 @@ const BikeModels = () => {
     setCurrentPage(1); // Reset to first page on new search
   };
 
-
+  // let imageUrl = getImageUrl(bikeModels[0].image);
+  console.log("bikeModels", bikeModels[0].manufacturer_logo);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -159,7 +160,7 @@ const BikeModels = () => {
                         <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 group h-full">
                           <div className="aspect-square overflow-hidden bg-muted relative">
                             <img
-                              src={model.image}
+                              src={getImageUrl(model?.manufacturer_logo || '')}
                               alt={`${model.manufacturer} ${model.name}`}
                               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                             />

@@ -17,20 +17,22 @@ export function getImageUrl(imagePath: string | null | undefined): string {
         return imagePath;
     }
 
-    // If it starts with /uploads, use it directly (will be proxied by Vite)
+    // Get the API base URL from environment variable
+    const apiUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+    
+    // If it starts with /uploads, prepend the API URL
     if (imagePath.startsWith('/uploads')) {
-        return imagePath;
+        return `${apiUrl}${imagePath}`;
     }
 
-    // If it starts with /, it's a relative path from the server root
+    // If it starts with /, prepend the API URL
     if (imagePath.startsWith('/')) {
-        return imagePath; // Use relative path, will be proxied
+        return `${apiUrl}${imagePath}`;
     }
 
-    // Otherwise, assume it's a relative path
-    return `/${imagePath}`;
+    // Otherwise, assume it's a relative path and prepend /uploads/
+    return `${apiUrl}/uploads/${imagePath}`;
 }
-
 // Helper function to build query strings
 function buildQueryString(params: Record<string, any>): string {
     const query = new URLSearchParams();

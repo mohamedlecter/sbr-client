@@ -40,30 +40,36 @@ const ProductDetail = () => {
             setProduct(data.part);
             
             // Use related_parts from response if available
-            if (data.related_parts && Array.isArray(data.related_parts)) {
+            if (Array.isArray(data.related_parts)) {
               // Filter out the current product
               const filtered = data.related_parts.filter((p: any) => p.id !== id);
               setRelatedProducts(filtered.slice(0, 3));
             } else {
-              // Fallback: fetch related products from the same category if not provided
+              // Fallback: fetch related products from the same category
               if (data.part.category_id) {
                 const relatedResponse = await productsApi.searchParts({
                   category_id: data.part.category_id,
                   limit: 4,
-                  page: 1
+                  page: 1,
                 });
+  
                 if (relatedResponse.data) {
-                  const related = (relatedResponse.data as any).parts || [];
-                  // Filter out the current product
+                  const related = Array.isArray((relatedResponse.data as any).parts)
+                    ? (relatedResponse.data as any).parts
+                    : [];
+  
                   const filtered = related.filter((p: any) => p.id !== id);
                   setRelatedProducts(filtered.slice(0, 3));
                 }
+              } else {
+                // No category, no related parts
+                setRelatedProducts([]);
               }
             }
           }
         }
       } catch (error) {
-        console.error('Error fetching product:', error);
+        console.error("Error fetching product:", error);
         toast({
           title: "Error",
           description: "Failed to load product details",
@@ -73,10 +79,10 @@ const ProductDetail = () => {
         setIsLoading(false);
       }
     };
-
+  
     fetchProduct();
   }, [id, toast]);
-
+  
   const handleAddToCart = async () => {
     if (!product || !id) return;
 
@@ -141,11 +147,13 @@ const ProductDetail = () => {
       </div>
     );
   }
-
-  const productImages = product.images && product.images.length > 0 ? product.images : [];
+  const productImages = Array.isArray(product.images) ? product.images : [];
   const stockQuantity = parseInt(product.quantity || '0');
   const sellingPrice = parseFloat(product.selling_price || '0');
   const isInStock = stockQuantity > 0;
+  const compatibilityList = product.compatibility
+  ? product.compatibility.split(',').map(m => m.trim())
+  : [];
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -214,8 +222,8 @@ const ProductDetail = () => {
             <div className="space-y-2 lg:space-y-2">
               <div>
                 <div className="flex items-center gap-3">
-                  {product.manufacturer_logo && (
-                    <img src={getImageUrl(product.manufacturer_logo)} alt={product.manufacturer_name} className="h-8 w-auto" />
+                  {product?.manufacturer_logo && (
+                    <img src={getImageUrl(product?.manufacturer_logo || '')} alt={product.manufacturer_name} className="h-8 w-auto" />
                   )}
                   <span className="text-sm text-muted-foreground">{product.manufacturer_name || ''}</span>
                 </div>
@@ -276,18 +284,16 @@ const ProductDetail = () => {
               </div>
 
               {/* Compatibility */}
-              {product.compatibility && (
-                <div>
-                  <h3 className="font-bold text-lg mb-3 lg:mb-4">Compatible Models</h3>
-                  <div className="space-y-2">
-                    {product.compatibility.split(',').map((model: string, index: number) => (
-                      <div key={index} className="flex items-center gap-2 text-sm">
-                        <Check className="h-4 w-4 text-primary flex-shrink-0" />
-                        <span>{model.trim()}</span>
-                      </div>
-                    ))}
-                  </div>
+              {compatibilityList.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {compatibilityList.map((model, index) => (
+                    <span key={index} className="bg-gray-100 ...">
+                      {model}
+                    </span>
+                  ))}
                 </div>
+              ) : (
+                <p className="text-gray-500 text-sm">Not specified</p>
               )}
 
               {/* Quantity & Add to Cart */}

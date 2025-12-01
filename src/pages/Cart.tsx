@@ -22,7 +22,7 @@ const Cart = () => {
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, []);
 
-  useEffect(() => {
+useEffect(() => {
     if (isAuthenticated) {
       dispatch(fetchCart());
     }
