@@ -49,7 +49,7 @@ const Register = () => {
           title: "Registration successful",
           description: "Please check your email to verify your account",
         });
-        navigate("/verify");
+        navigate("/login");
       } else {
         toast({
           title: "Registration failed",
